@@ -1196,6 +1196,9 @@
         <group>
             <name>User</name>
             <file>
+                <name>$PROJ_DIR$\..\Src\gpio.c</name>
+            </file>
+            <file>
                 <name>$PROJ_DIR$\..\Src\main.c</name>
             </file>
             <file>
@@ -1203,6 +1206,9 @@
             </file>
             <file>
                 <name>$PROJ_DIR$\..\Src\stm32f2xx_it.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\Src\uart.c</name>
             </file>
         </group>
     </group>

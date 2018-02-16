@@ -41,7 +41,8 @@
 
 /* External variables --------------------------------------------------------*/
 //extern TIM_HandleTypeDef htim1;
-//extern UART_HandleTypeDef huart1;
+/* UART handler declared in "uart.c" file */
+extern UART_HandleTypeDef UartHandle;
 
 /******************************************************************************/
 /*            Cortex-M3 Processor Interruption and Exception Handlers         */ 
@@ -234,7 +235,7 @@ void TIM1_CC_IRQHandler(void)
   //USER CODE END TIM1_CC_IRQn 1 
 }
 
-
+*/
 //@brief This function handles USART1 global interrupt.
 
 void USART1_IRQHandler(void)
@@ -242,12 +243,12 @@ void USART1_IRQHandler(void)
   //USER CODE BEGIN USART1_IRQn 0 
 
   //USER CODE END USART1_IRQn 0 
-  HAL_UART_IRQHandler(&huart1);
+  HAL_UART_IRQHandler(&UartHandle);
   //USER CODE BEGIN USART1_IRQn 1 
 
   //USER CODE END USART1_IRQn 1 
 }
-*/
+
 //USER CODE BEGIN 1 
 
 //USER CODE END 1 

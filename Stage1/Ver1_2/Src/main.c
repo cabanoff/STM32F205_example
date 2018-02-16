@@ -40,7 +40,9 @@
 #include "stm32f2xx_hal.h"
 
 /* USER CODE BEGIN Includes */
-
+#include "gpio.h"
+#include "uart.h"
+#include "intrinsics.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -74,12 +76,11 @@ uint32_t uwPrescalerValue = 0;
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-//static void MX_GPIO_Init(void);
 //static void MX_USART1_UART_Init(void);
 static void MX_TIM1_Init(void);
 //static void MX_RNG_Init(void);
 //static void MX_WWDG_Init(void);
-//static void MX_NVIC_Init(void);
+static void MX_NVIC_Init(void);
                                     
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
                                 
@@ -117,7 +118,8 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
+  gpioInit();
+  uartInit(9600);
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -126,11 +128,14 @@ int main(void)
   MX_TIM1_Init();
  // MX_RNG_Init();
  // MX_WWDG_Init();
+  
 
   /* Initialize interrupts */
- // MX_NVIC_Init();
+  MX_NVIC_Init();
   /* USER CODE BEGIN 2 */
-
+  gpioSetPC3();
+  gpioClearPC3();              //to enable RX
+  uartStartRX();               
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -202,23 +207,23 @@ void SystemClock_Config(void)
   * @brief NVIC Configuration.
   * @retval None
   */
-/*
+
 static void MX_NVIC_Init(void)
 {
   //USART1_IRQn interrupt configuration
   HAL_NVIC_SetPriority(USART1_IRQn, 2, 0);
   HAL_NVIC_EnableIRQ(USART1_IRQn);
   //TIM1_CC_IRQn interrupt configuration
-  HAL_NVIC_SetPriority(TIM1_CC_IRQn, 1, 0);
-  HAL_NVIC_EnableIRQ(TIM1_CC_IRQn);
+ // HAL_NVIC_SetPriority(TIM1_CC_IRQn, 1, 0);
+ // HAL_NVIC_EnableIRQ(TIM1_CC_IRQn);
   //TIM1_UP_TIM10_IRQn interrupt configuration
-  HAL_NVIC_SetPriority(TIM1_UP_TIM10_IRQn, 3, 0);
-  HAL_NVIC_EnableIRQ(TIM1_UP_TIM10_IRQn);
+ // HAL_NVIC_SetPriority(TIM1_UP_TIM10_IRQn, 3, 0);
+ // HAL_NVIC_EnableIRQ(TIM1_UP_TIM10_IRQn);
   //RCC_IRQn interrupt configuration
-  HAL_NVIC_SetPriority(RCC_IRQn, 4, 0);
-  HAL_NVIC_EnableIRQ(RCC_IRQn);
+ // HAL_NVIC_SetPriority(RCC_IRQn, 4, 0);
+ // HAL_NVIC_EnableIRQ(RCC_IRQn);
 }
-*/
+
 /* RNG init function */
 /*
 static void MX_RNG_Init(void)
@@ -237,7 +242,7 @@ static void MX_TIM1_Init(void)
 {
    /*##-1- Configure the TIM peripheral #######################################*/
   /* ---------------------------------------------------------------------------
-  1/ Generate 3 complementary PWM signals with 3 different duty cycles:
+  1/ Generate complementary PWM signal :
   
     TIM1 input clock (TIM1CLK) is set to 2 * APB2 clock (PCLK2), since APB2 
     prescaler is different from 1.   
@@ -246,26 +251,22 @@ static void MX_TIM1_Init(void)
     => TIM1CLK = 2 * (HCLK / 2) = HCLK = SystemCoreClock
   
     TIM1CLK is fixed to SystemCoreClock, the TIM1 Prescaler is set to have
-    TIM1 counter clock = 18MHz..
+    TIM1 counter clock = 120MHz..
 
-    The objective is to generate PWM signal at 10 KHz:
-    - TIM1_Period = (SystemCoreClock / 10000) - 1
 
     The Three Duty cycles are computed as the following description: 
 
     The channel 1 duty cycle is set to 50% so channel 1N is set to 50%.
-    The channel 2 duty cycle is set to 25% so channel 2N is set to 75%.
-    The channel 3 duty cycle is set to 12.5% so channel 3N is set to 87.5%.
+    
     
     The Timer pulse is calculated as follows:
       - ChannelxPulse = DutyCycle * (TIM1_Period - 1) / 100
 
-  2/ Insert a dead time equal to (11/SystemCoreClock) ns
+  2/ Insert a dead time equal to (312/SystemCoreClock) ns
 
   3/ Configure the break feature, active at High level, and using the automatic 
      output enable feature
 
-  4/ Use the Locking parameters level1. 
   
   Note: 
      SystemCoreClock variable holds HCLK frequency and is defined in system_stm32f2xx.c file.
@@ -462,6 +463,7 @@ void _Error_Handler(char *file, int line)
   /* User can add his own implementation to report the HAL error return state */
   while(1)
   {
+    __no_operation();
   }
   /* USER CODE END Error_Handler_Debug */
 }
