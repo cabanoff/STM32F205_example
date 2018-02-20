@@ -1043,6 +1043,9 @@
                 <name>$PROJ_DIR$\..\Src\stm32f2xx_it.c</name>
             </file>
             <file>
+                <name>$PROJ_DIR$\..\Src\tim1.c</name>
+            </file>
+            <file>
                 <name>$PROJ_DIR$\..\Src\uart.c</name>
             </file>
         </group>

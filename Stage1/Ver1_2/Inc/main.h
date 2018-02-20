@@ -49,10 +49,7 @@
 
 /* Private define ------------------------------------------------------------*/
 
-#define Tx1_Pin GPIO_PIN_7
-#define Tx1_GPIO_Port GPIOA
-#define Tx2_Pin GPIO_PIN_8
-#define Tx2_GPIO_Port GPIOA
+
 
 /* ########################## Assert Selection ############################## */
 /**

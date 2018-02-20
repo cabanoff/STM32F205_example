@@ -13,8 +13,6 @@
 
 extern void _Error_Handler(char *, int);
 
-uint32_t testRX = 0,testTX = 0, testErr = 0;
-
 /** @addtogroup UART
   * @{
   */ 
@@ -23,6 +21,8 @@ uint32_t testRX = 0,testTX = 0, testErr = 0;
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
+uint32_t testRX = 0,testTX = 0, testErr = 0;    
+uint8_t dataGet =0;
 /* UART handler declaration */
 UART_HandleTypeDef UartHandle;
 
@@ -60,7 +60,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *UartHandle)
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 {
   /*Transfer in reception process is correct */
-   __no_operation();
+   dataGet = 1;
    testRX++;
 }
 
@@ -120,11 +120,34 @@ void uartInit(uint32_t baudRate)
   */
 void uartStartRX(void)
 {
+  while (HAL_UART_GetState(&UartHandle) != HAL_UART_STATE_READY);
+  dataGet =0;
   if(HAL_UART_Receive_IT(&UartHandle, (uint8_t *)aRxBuffer, RXBUFFERSIZE) != HAL_OK)
   {
     /*Transfer error in reception process */
    _Error_Handler(__FILE__, __LINE__);
   }
+}
+
+
+/**
+  * @brief  check if data received from UART
+  * @param  None
+  * @retval 1 - data received 0 - no data
+  */
+uint8_t uartIsData(void)
+{
+  if(dataGet == 1)return 1;
+  else return 0;
+}
+/**
+  * @brief  get data received from UART
+  * @param  None
+  * @retval data received
+  */
+char uartGetData(void)
+{
+  return aRxBuffer[0];
 }
 /**
   * @}
