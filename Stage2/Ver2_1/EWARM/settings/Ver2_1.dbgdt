@@ -851,7 +851,7 @@
                     <item>testRX</item>
                     <item>testTX</item>
                     <item>aRxBuffer</item>
-                    <item></item>
+                    <item />
                 </expressions>
                 <col-names>
                     <item>Expression</item>
