@@ -137,7 +137,21 @@ void uartStartRX(void)
   */
 uint8_t uartIsData(void)
 {
-  if(dataGet == 1)return 1;
+  if(dataGet == 1)
+  {
+        /*Send the received Buffer ###########################################*/  
+      if(HAL_UART_Transmit_IT(&UartHandle, (uint8_t*)aRxBuffer, RXBUFFERSIZE)!= HAL_OK)
+      {
+        /* Transfer error in transmission process */
+       _Error_Handler(__FILE__, __LINE__);
+      }
+      
+      /*Wait for the end of the transfer ###################################*/  
+      while (HAL_UART_GetState(&UartHandle) != HAL_UART_STATE_READY)
+      {
+      }
+        return 1;
+  }
   else return 0;
 }
 /**

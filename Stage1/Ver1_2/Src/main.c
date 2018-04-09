@@ -28,9 +28,16 @@ typedef struct
   uint32_t period;
 } PWMPeriodTypeDef;
 
-#define MAX_PERIOD_NUM 10
 
-PWMPeriodTypeDef  PWMPeriod[MAX_PERIOD_NUM] = {'0',2790,'1',2783,'2',2777,'3',2770,'4',2764,'5',2751,'6',2739,'7',2726,'8',2714,'9',2702};//2690,2678,2666,2608,2552,2499,2448,2438,2428
+
+PWMPeriodTypeDef  PWMPeriods[] = {'1',2790,'2',2783,'3',2777,'4',2770,'5',2764,'6',2751,
+                                  '7',2739,'8',2726,'9',2714,'0',2702,'q',2690,'w',2678,
+                                  'e',2666,'r',2654,'t',2642,'y',2631,'u',2619,'i',2608,
+                                  'o',2596,'p',2585,'a',2574,'s',2563,'d',2552,'f',2541,
+                                  'g',2531,'h',2520,'j',2509,'k',2499,'l',2489,'z',2478,
+                                  'x',2468,'c',2458,'v',2448,'b',2438,'n',2428};
+
+#define MAX_PERIOD_NUM (sizeof(PWMPeriods))
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
@@ -109,10 +116,10 @@ int main(void)
       char data = uartGetData();
       for(int i = 0; i < MAX_PERIOD_NUM; i++)
       {
-        if(PWMPeriod[i].digit == data)
+        if(PWMPeriods[i].digit == data)
         {
           tim1Stop();
-          tim1SetPeriod(PWMPeriod[i].period);
+          tim1SetPeriod(PWMPeriods[i].period);
           tim1Start();
           break;
         }
