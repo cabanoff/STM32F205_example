@@ -45,13 +45,30 @@ void uartInit(uint32_t baudRate);
   */
 void uartStartRX(void);
 /**
+  * @brief  uart start RX in blocking mode
+  *     Put UART peripheral in reception process  
+  *     Any data received will be stored aRxBuffer[0]
+  * @param  Timeout in msec
+  * @retval -1 if timeout  
+  *         received data
+  */
+int uartStartRXBlock(uint32_t Timeout);
+/**
   * @brief  uart start TX
   *     Put UART peripheral in transmission process  
   *     
   * @param  data data to transmit
   * @retval None
-  */
+  */   
 void uartStartTX(uint8_t data);
+/**
+  * @brief  uart start TX in blocking mode
+  *     Put UART peripheral in transmission process  
+  *     
+  * @param  data data to transmit
+  * @retval None
+  */
+void uartStartTXBlock(uint8_t data);
 /**
   * @brief  check if data received from UART
   * @param  None

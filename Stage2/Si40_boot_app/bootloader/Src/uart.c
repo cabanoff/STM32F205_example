@@ -138,6 +138,25 @@ void uartStartRX(void)
 }
 
 /**
+  * @brief  uart start RX in blocking mode
+  *     Put UART peripheral in reception process  
+  *     Any data received will be stored aRxBuffer[0]
+  * @param  Timeout in msec
+  * @retval -1 if timeout  
+  *         received data
+  */
+int uartStartRXBlock(uint32_t Timeout)
+{
+  while (HAL_UART_GetState(&UartHandle) != HAL_UART_STATE_READY);
+  
+  if(HAL_UART_Receive(&UartHandle, (uint8_t *)aRxBuffer, 1, Timeout)!= HAL_OK)
+  {
+    return -1;
+  }
+  return (aRxBuffer[0]);
+}
+
+/**
   * @brief  uart start TX
   *     Put UART peripheral in transmission process  
   *     
@@ -149,6 +168,25 @@ void uartStartTX(uint8_t data)
   aTxBuffer[0] = data;
   while (HAL_UART_GetState(&UartHandle) != HAL_UART_STATE_READY);
   if(HAL_UART_Transmit_IT(&UartHandle, (uint8_t *)aTxBuffer, 1) != HAL_OK)
+  {
+    /*Transfer error in reception process */
+   _Error_Handler(__FILE__, __LINE__);
+  }
+}
+
+/**
+  * @brief  uart start TX in blocking mode
+  *     Put UART peripheral in transmission process  
+  *     
+  * @param  data data to transmit
+  * @retval None
+  */
+void uartStartTXBlock(uint8_t data)
+{
+  aTxBuffer[0] = data;
+  while (HAL_UART_GetState(&UartHandle) != HAL_UART_STATE_READY);
+  
+  if(HAL_UART_Transmit(&UartHandle,(uint8_t *)aTxBuffer, 1, 10) != HAL_OK)
   {
     /*Transfer error in reception process */
    _Error_Handler(__FILE__, __LINE__);

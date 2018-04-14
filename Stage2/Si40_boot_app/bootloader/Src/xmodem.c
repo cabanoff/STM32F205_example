@@ -132,7 +132,7 @@ int xmodemReceive(unsigned char *dest, int destsz)
 
 	for(;;) {
 		for( retry = 0; retry < 16; ++retry) {
-			if (trychar) _outbyte(trychar);
+			if (trychar) _outbyte(trychar);//if (trychar) _outbyte('.');//
 			if ((c = _inbyte((DLY_1S)<<1)) >= 0) {
 				switch (c) {
 				case SOH:

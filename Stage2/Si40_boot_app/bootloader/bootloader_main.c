@@ -64,7 +64,6 @@ int errorLine;
 void SystemClock_Config(void);
 static void MX_NVIC_Init(void);
 static void goToApp(void);
-void HAL_SYSTICK_Callback(void);
 int inbyte(unsigned short);
 void outbyte(int);
 /* Private functions ---------------------------------------------------------*/
@@ -96,12 +95,10 @@ int main(void)
  
   gpioSetPC3();
   gpioClearPC3();              //to enable RX
-  uartStartRX();        
+      
   
-  HAL_Delay(1000);
-  uartStartTX('1');
   xmodemTest();
-
+  uartStartRX();    
   /* Infinite loop */
 
   while (1)
@@ -111,13 +108,13 @@ int main(void)
     {
       char data = uartGetData();
       
-      uartStartTX(data);
+      outbyte(data);
       switch(data)
       {
        case '1':         //download file using xmodem
         xmodemResult = xmodemReceive(buffer.forXModem,lengthBytes);
-        if(xmodemResult < 0)uartStartTX('5'+ xmodemResult);
-        else uartStartTX('5');
+        if(xmodemResult < 0)outbyte('5'+ xmodemResult);
+        else outbyte('5');
        break;
        case '2':         //write buffer to sector 4
         flashFillMemory(buffer.forFlash,lengthWords);
@@ -189,14 +186,6 @@ void SystemClock_Config(void)
 }
 
 /**
-  * @brief  SYSTICK callback.
-  * @retval None
-  */
-void HAL_SYSTICK_Callback(void)
-{
-  sysTickCounter++;
-}
-/**
   * @brief  rec
   * @param timeout - timeout in msec
   * @retval input byte from UART
@@ -204,24 +193,13 @@ void HAL_SYSTICK_Callback(void)
   */
 int inbyte(unsigned short timeout)
 {
-  uint32_t currentTime = sysTickCounter;
-  uint32_t timeOutTime = currentTime + timeout;
-  uartStartRX(); 
-  while(timeOutTime <= sysTickCounter)
-  {
-    if(uartIsData())
-    {
-      char data = uartGetData();
-      return data;
-    }
-  }
-  return -1;
+  return (uartStartRXBlock(timeout));
 }
 
 void outbyte(int c)
 {
   uint8_t data = c;
-  uartStartTX(data);
+  uartStartTXBlock(data);
 }
 
 /**
