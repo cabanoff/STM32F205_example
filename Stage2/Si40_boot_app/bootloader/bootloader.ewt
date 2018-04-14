@@ -2397,6 +2397,9 @@
             <file>
                 <name>$PROJ_DIR$\Src\uart.c</name>
             </file>
+            <file>
+                <name>$PROJ_DIR$\Src\xmodem.c</name>
+            </file>
         </group>
     </group>
     <group>

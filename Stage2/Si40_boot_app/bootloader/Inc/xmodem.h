@@ -1,54 +1,40 @@
 /**
   ******************************************************************************
-  * @file    tim1.h 
+  * @file    xmodem.h 
   * @author  AKabanov
-  * @brief   Header for tim1.c module
+  * @brief   Header for xmodem.c module
   ******************************************************************************
   ******************************************************************************
   */
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __TIM1_H
-#define __TIM1_H
+#ifndef __XMODEM_H
+#define __XMODEM_H
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f2xx_hal.h"
-
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
-
-#define Tx1_Pin GPIO_PIN_7
-#define Tx1_GPIO_Port GPIOA
-#define Tx2_Pin GPIO_PIN_8
-#define Tx2_GPIO_Port GPIOA
 
 /* Exported macro ------------------------------------------------------------*/
 
 /* Exported functions ------------------------------------------------------- */
-/**
-  * @brief  init timer
-  * @param  None
-  * @retval None
-  */
 
-void tim1Init(void);
 /**
-  * @brief  stop timer
-  * @param  None
-  * @retval None
+  * @brief  uart start RX
+  *     Put UART peripheral in reception process  
+  *     Any data received will be stored "aRxBuffer" buffer : the number max of 
+  *     data received is RXBUFFERSIZE
+  * @param  dest - buffer to download data
+  * @param  destsz - size of buffer to download data
+  * @retval number of bytes received; normal end  
+  *         -1;  canceled by remote 
+  *         -2;  sync error
+  *         -3;  too many retry error
   */
+int xmodemReceive(unsigned char *, int );
 
-void tim1Stop(void);
-/**
-  * @brief  start timer
-  * @param  None
-  * @retval None
-  */
-void tim1Start(void);
-/**
-  * @brief  set period 
-  * @param  Period in 1/120MHz  units
-  * @retval true sucsess
-  */
-uint8_t tim1SetPeriod(uint32_t period);
+// assign in and out functions
+void xmodenInit(int(*inbyte)(unsigned short), void(*outbyte)(int));
+//printing test message
+void xmodemTest(void);
 
-#endif /* __TIM1_H */
+#endif /* __XMODEM_H */

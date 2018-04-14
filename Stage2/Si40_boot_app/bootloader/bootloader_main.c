@@ -21,7 +21,10 @@
 #include "gpio.h"
 #include "uart.h"
 #include "flash.h"
+#include "xmodem.h"
 #include "intrinsics.h"
+
+#define MAX_DOWNLOAD_BYTES   1024*16
 
 /* Private typedef -----------------------------------------------------------*/
 typedef void (application_t) (void);
@@ -31,6 +34,12 @@ typedef struct vector
     uint32_t        stack_addr;     // intvec[0] is initial Stack Pointer
     application_t   *func_p;        // intvec[1] is initial Program Counter
 } vector_t;
+
+typedef union download
+{  
+  unsigned char     forXModem[MAX_DOWNLOAD_BYTES];
+  uint32_t          forFlash[MAX_DOWNLOAD_BYTES/4];
+} download_t;
 
 /* Private variables ---------------------------------------------------------*/
 extern const uint32_t app_vector;   // Application vector address symbol from 
@@ -42,13 +51,22 @@ volatile uint32_t stack_arr[100]    = {0}; // Allocate some stack
                                                // before the jump - or the
                                                // stack won't be configured
                                                // correctly.
-uint32_t bufferDownload[100];
+download_t buffer;
 
-uint32_t length = COUNTOF(bufferDownload);
+uint32_t lengthWords = MAX_DOWNLOAD_BYTES/4;
+uint32_t lengthBytes = MAX_DOWNLOAD_BYTES;
+int xmodemResult = 0;
+
+volatile uint32_t sysTickCounter = 0;
+char *errorFile;
+int errorLine;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_NVIC_Init(void);
 static void goToApp(void);
+void HAL_SYSTICK_Callback(void);
+int inbyte(unsigned short);
+void outbyte(int);
 /* Private functions ---------------------------------------------------------*/
 // ------------------------------------------------------
 /**
@@ -64,20 +82,25 @@ int main(void)
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
 
-  for(uint32_t i = 0; i < length; i++)bufferDownload[i] = i;
+  for(uint32_t i = 0; i < lengthWords; i++)buffer.forFlash[i] = i;
 
   /* Configure the system clock */
   SystemClock_Config();
 
   gpioInit();
   uartInit(9600);
+  xmodenInit(inbyte,outbyte);
   
   /* Initialize interrupts */
   MX_NVIC_Init();
  
   gpioSetPC3();
   gpioClearPC3();              //to enable RX
-  uartStartRX();               
+  uartStartRX();        
+  
+  HAL_Delay(1000);
+  uartStartTX('1');
+  xmodemTest();
 
   /* Infinite loop */
 
@@ -91,15 +114,17 @@ int main(void)
       uartStartTX(data);
       switch(data)
       {
-       case '1':         //eraze sector 4
-        __no_operation();
+       case '1':         //download file using xmodem
+        xmodemResult = xmodemReceive(buffer.forXModem,lengthBytes);
+        if(xmodemResult < 0)uartStartTX('5'+ xmodemResult);
+        else uartStartTX('5');
        break;
-      case '2':         //write buffer to sector 4
-        flashFillMemory(bufferDownload,length);
-        break;
-      case '3':         //write buffer to sector 4
+       case '2':         //write buffer to sector 4
+        flashFillMemory(buffer.forFlash,lengthWords);
+       break;
+       case '3':         //jump from bootloader to application
         goToApp();
-        break;
+       break;
       }
       
       uartStartRX(); 
@@ -164,6 +189,42 @@ void SystemClock_Config(void)
 }
 
 /**
+  * @brief  SYSTICK callback.
+  * @retval None
+  */
+void HAL_SYSTICK_Callback(void)
+{
+  sysTickCounter++;
+}
+/**
+  * @brief  rec
+  * @param timeout - timeout in msec
+  * @retval input byte from UART
+  *         -1 if timeout expired
+  */
+int inbyte(unsigned short timeout)
+{
+  uint32_t currentTime = sysTickCounter;
+  uint32_t timeOutTime = currentTime + timeout;
+  uartStartRX(); 
+  while(timeOutTime <= sysTickCounter)
+  {
+    if(uartIsData())
+    {
+      char data = uartGetData();
+      return data;
+    }
+  }
+  return -1;
+}
+
+void outbyte(int c)
+{
+  uint8_t data = c;
+  uartStartTX(data);
+}
+
+/**
   * @brief  hand over application
   *
   * @retval None
@@ -212,6 +273,8 @@ void _Error_Handler(char *file, int line)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
+  errorFile = file;
+  errorLine = line;
   while(1)
   {
     __no_operation();
