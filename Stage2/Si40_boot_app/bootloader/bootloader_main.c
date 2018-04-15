@@ -18,6 +18,7 @@
 #include "main.h"
 #include "stm32f2xx_hal.h"
 
+
 #include "gpio.h"
 #include "uart.h"
 #include "flash.h"
@@ -66,6 +67,8 @@ static void MX_NVIC_Init(void);
 static void goToApp(void);
 int inbyte(unsigned short);
 void outbyte(int);
+
+
 /* Private functions ---------------------------------------------------------*/
 // ------------------------------------------------------
 /**
@@ -97,7 +100,8 @@ int main(void)
   gpioClearPC3();              //to enable RX
       
   
-  xmodemTest();
+  /* Output a message on Hyperterminal using printf function */
+  printf("\n\r Start bootloader software\n\r");
   uartStartRX();    
   /* Infinite loop */
 
@@ -111,17 +115,36 @@ int main(void)
       outbyte(data);
       switch(data)
       {
-       case '1':         //download file using xmodem
-        xmodemResult = xmodemReceive(buffer.forXModem,lengthBytes);
-        if(xmodemResult < 0)outbyte('5'+ xmodemResult);
-        else outbyte('5');
-       break;
-       case '2':         //write buffer to sector 4
-        flashFillMemory(buffer.forFlash,lengthWords);
-       break;
-       case '3':         //jump from bootloader to application
-        goToApp();
-       break;
+        case 'd':         //download file using xmodem
+          printf("\n\r File>Transfer>XMODEM>Send...\n\r");
+          xmodemResult = xmodemReceive(buffer.forXModem,lengthBytes);
+          if(xmodemResult < 0)printf("\n\r error %d during downloading\n\r", xmodemResult);
+          else
+          {
+            printf("\n\r dowloaded %d bytes\n\r", xmodemResult);
+            flashFillMemory(buffer.forFlash,lengthWords);
+          }
+          break;
+        case 'j':         //write buffer to sector 4
+          printf("\n\r Jump to application\n\r");
+          goToApp();
+          break;
+        case 's':         //jump from bootloader to application
+          printf("\n\r Serial number - 00001\n\r");
+          break;
+        case 'v':
+          printf("\n\r Software version - V00.1\n\r");
+          break;
+        case 'e':
+          printf("\n\r Enter parameter to edit\n\r");
+          break;
+        case 'h':
+          printf("\n\r d - Download image");
+          printf("\n\r j - Start application");
+          printf("\n\r s - Show device serial number");
+          printf("\n\r v - Show software version");
+          printf("\n\r e - Edit parameters\n\r");
+          break;
       }
       
       uartStartRX(); 
@@ -184,6 +207,8 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 }
+
+
 
 /**
   * @brief  rec
