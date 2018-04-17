@@ -2450,4 +2450,10 @@
             </file>
         </group>
     </group>
+    <group>
+        <name>Linker</name>
+        <file>
+            <name>$PROJ_DIR$\stm32F205xx_application.icf</name>
+        </file>
+    </group>
 </project>

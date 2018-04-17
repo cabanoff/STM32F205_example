@@ -3,7 +3,7 @@
  *      Flash:           0x08000000 - 0x0801FFFF (128 KB)
  *      Bootloader:      0x08000000 - 0x0800BFFF (48 KB)
  *      EEPROM:          0x0800C000 - 0x0800FFFF (16 KB)
- *      Application:     0x08010000 - 0x0801FFFF (64KB)
+ *      Application:     0x08010200 - 0x0801FFFF (64KB)
 
 
   ******************************************************************************
@@ -25,7 +25,8 @@
 #include "xmodem.h"
 #include "intrinsics.h"
 
-#define MAX_DOWNLOAD_BYTES   1024*16
+#define HEADER 0x200
+#define MAX_DOWNLOAD_BYTES   (1024 * 16 + HEADER)
 
 /* Private typedef -----------------------------------------------------------*/
 typedef void (application_t) (void);
@@ -36,10 +37,16 @@ typedef struct vector
     application_t   *func_p;        // intvec[1] is initial Program Counter
 } vector_t;
 
+typedef struct 
+{
+  unsigned char header[HEADER];
+  unsigned char body[MAX_DOWNLOAD_BYTES - HEADER];
+} forXModem_t;
+
 typedef union download
 {  
-  unsigned char     forXModem[MAX_DOWNLOAD_BYTES];
-  uint32_t          forFlash[MAX_DOWNLOAD_BYTES/4];
+  forXModem_t     forXModem;
+  uint32_t        forFlash[MAX_DOWNLOAD_BYTES/4];
 } download_t;
 
 /* Private variables ---------------------------------------------------------*/
@@ -53,9 +60,6 @@ volatile uint32_t stack_arr[100]    = {0}; // Allocate some stack
                                                // stack won't be configured
                                                // correctly.
 download_t buffer;
-
-uint32_t lengthWords = MAX_DOWNLOAD_BYTES/4;
-uint32_t lengthBytes = MAX_DOWNLOAD_BYTES;
 int xmodemResult = 0;
 
 volatile uint32_t sysTickCounter = 0;
@@ -84,13 +88,13 @@ int main(void)
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
 
-  for(uint32_t i = 0; i < lengthWords; i++)buffer.forFlash[i] = i;
+  for(uint32_t i = 0; i < MAX_DOWNLOAD_BYTES/4; i++)buffer.forFlash[i] = 0x33;
 
   /* Configure the system clock */
   SystemClock_Config();
 
   gpioInit();
-  uartInit(9600);
+  uartInit(115200);
   xmodenInit(inbyte,outbyte);
   
   /* Initialize interrupts */
@@ -117,12 +121,24 @@ int main(void)
       {
         case 'd':         //download file using xmodem
           printf("\n\r File>Transfer>XMODEM>Send...\n\r");
-          xmodemResult = xmodemReceive(buffer.forXModem,lengthBytes);
+          xmodemResult = xmodemReceive(buffer.forXModem.body,MAX_DOWNLOAD_BYTES - HEADER);
           if(xmodemResult < 0)printf("\n\r error %d during downloading\n\r", xmodemResult);
           else
           {
-            printf("\n\r dowloaded %d bytes\n\r", xmodemResult);
-            flashFillMemory(buffer.forFlash,lengthWords);
+            printf("\n\r read %d bytes\n\r", xmodemResult);
+            xmodemResult  = flashFillMemory(buffer.forFlash,MAX_DOWNLOAD_BYTES/4);
+            switch(xmodemResult)
+            {
+            case 0:
+              printf(" Data was successfully written in Flash memory.\n\r");
+              break;
+            case 1:
+              printf(" Error occurred while sector erase.\n\r ");
+              break;
+            case 2:
+              printf(" Error occurred while writing data in Flash memory.\n\r");
+              break;
+            }
           }
           break;
         case 'j':         //write buffer to sector 4

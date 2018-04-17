@@ -1,10 +1,9 @@
 /*
- * STM32F205RB 
+  STM32F205RB 
  *      Flash:           0x08000000 - 0x0801FFFF (128 KB)
  *      Bootloader:      0x08000000 - 0x0800BFFF (48 KB)
  *      EEPROM:          0x0800C000 - 0x0800FFFF (16 KB)
- *      Application:     0x08010000 - 0x0801FFFF (64KB)
-
+ *      Application:     0x08010200 - 0x0801FFFF (64KB)
 
   ******************************************************************************
   * @file    Si40_boot_app\application\main.c 
