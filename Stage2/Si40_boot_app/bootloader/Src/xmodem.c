@@ -47,7 +47,7 @@
 #define CAN  0x18
 #define CTRLZ 0x1A
 
-#define DLY_1S 1000
+#define DLY_1S (1000)
 #define MAXRETRANS 25
 
 // msec timeout
@@ -76,7 +76,7 @@ void xmodenInit(int(*inbyte)(unsigned short), void(*outbyte)(int))
   _outbyte = outbyte;
 }
 
-static unsigned short crc16_ccitt(const unsigned char *buf, int sz)
+unsigned short crc16_ccitt(const unsigned char *buf, int sz)
 {
 	unsigned short crc = 0;
 	while (--sz >= 0) 
@@ -93,7 +93,7 @@ static unsigned short crc16_ccitt(const unsigned char *buf, int sz)
 	return crc;
 }
 
-static int check(int crc, const unsigned char *buf, int sz)
+int check(int crc, const unsigned char *buf, int sz)
 {
 	if (crc) {
 		unsigned short _crc = crc16_ccitt(buf, sz);
@@ -114,102 +114,70 @@ static int check(int crc, const unsigned char *buf, int sz)
 	return 0;
 }
 
-static void flushinput(void)
+static int flushinput(int value)
 {
-	while (_inbyte(((DLY_1S)*3)>>1) >= 0)
-		;
+	while (_inbyte(((DLY_1S)*3)>>1) >= 0);
+        return value;		
+}
+
+static int convStr2Byte(unsigned char *str2Byte)
+{
+  int result = 0;
+  if((str2Byte[2] != 0x20)&&(str2Byte[2] != 0x0d))return -1;
+  if((str2Byte[0] >= ('0'))&&(str2Byte[0] <= ('9')))result = (str2Byte[0]-'0')<<4;
+  else if((str2Byte[0] >= ('A'))&&(str2Byte[0] <= ('F')))result = (str2Byte[0]-'A'+10)<<4;
+  else return -1;
+  if((str2Byte[1] >= ('0'))&&(str2Byte[1] <= ('9')))result += (str2Byte[1]-'0');
+  else if((str2Byte[1] >= ('A'))&&(str2Byte[0] <= ('F')))result += (str2Byte[1]-'A'+10);
+  else return -1;
+  return result;
 }
 
 int xmodemReceive(unsigned char *dest, int destsz)
 {
-	unsigned char xbuff[1030]; /* 1024 for XModem 1k + 3 head chars + 2 crc + nul */
-	unsigned char *p;
-	int bufsz, crc = 0;
-	unsigned char trychar = 'C';
-	unsigned char packetno = 1;
-	int i, c, len = 0;
-	int retry, retrans = MAXRETRANS;
-
-	for(;;) {
-		for( retry = 0; retry < 16; ++retry) {
-			if (trychar) _outbyte(trychar);//if (trychar) _outbyte('.');//
-			if ((c = _inbyte((DLY_1S)<<1)) >= 0) {
-				switch (c) {
-				case SOH:
-					bufsz = 128;
-					goto start_recv;
-				case STX:
-					bufsz = 1024;
-					goto start_recv;
-				case EOT:
-					flushinput();
-					_outbyte(ACK);
-					return len; /* normal end */
-				case CAN:
-					if ((c = _inbyte(DLY_1S)) == CAN) {
-						flushinput();
-						_outbyte(ACK);
-						return -1; /* canceled by remote */
-					}
-					break;
-				default:
-					break;
-				}
-			}
-		}
-		if (trychar == 'C') { trychar = NAK; continue; }
-		flushinput();
-		_outbyte(CAN);
-		_outbyte(CAN);
-		_outbyte(CAN);
-		return -2; /* sync error */
-
-	start_recv:
-		if (trychar == 'C') crc = 1;
-		trychar = 0;
-		p = xbuff;
-		*p++ = c;
-		for (i = 0;  i < (bufsz+(crc?1:0)+3); ++i) {
-			if ((c = _inbyte(DLY_1S)) < 0) goto reject;
-			*p++ = c;
-		}
-
-		if (xbuff[1] == (unsigned char)(~xbuff[2]) && 
-			(xbuff[1] == packetno || xbuff[1] == (unsigned char)packetno-1) &&
-			check(crc, &xbuff[3], bufsz)) {
-			if (xbuff[1] == packetno)	{
-				register int count = destsz - len;
-				if (count > bufsz) count = bufsz;
-				if (count > 0) {
-					memcpy (&dest[len], &xbuff[3], count);
-					len += count;
-				}
-				++packetno;
-				retrans = MAXRETRANS+1;
-			}
-			if (--retrans <= 0) {
-				flushinput();
-				_outbyte(CAN);
-				_outbyte(CAN);
-				_outbyte(CAN);
-				return -3; /* too many retry error */
-			}
-			_outbyte(ACK);
-			continue;
-		}
-	reject:
-		flushinput();
-		_outbyte(NAK);
-	}
+  unsigned char header[] = {"@08010200"};
+  unsigned char str2Byte[3];
+  int inData = -1;
+  int pointer = 0;
+  if(destsz == 0)return -2;
+  for(int i = 20; i > 0; i--) //delay 20sec
+  {
+    inData = _inbyte(DLY_1S);
+    if(inData >= 0)break;
+  }
+  if(inData < 0)return -1;
+  /*
+   * receive header @08010200\n
+  */
+  for(unsigned int i =0; i < sizeof(header)-1;i++)
+  {
+    if(inData != header[i])return flushinput(-2);
+    inData = _inbyte(DLY_1S);
+  }
+  if(inData != 0x0d)return flushinput(-2);
+  
+  /*
+   * receive body
+  */
+  while(pointer < destsz)
+  {
+    for(int i = 0; i < 3; i++)
+    {
+      inData = _inbyte(DLY_1S*2);
+      if(inData < 0)return flushinput(-3);
+      if(inData == 'q')return flushinput(pointer); // file received
+      str2Byte[i] = inData;
+    }
+    inData = convStr2Byte(str2Byte);
+    if(inData >= 0)dest[pointer++] = inData;
+    else return flushinput(-4);   
+  }
+  return flushinput(-5);  // file too big
 }
 
-void xmodemTest(void)
-{
-  _outbyte('T');
-  _outbyte('e');
-  _outbyte('s');
-  _outbyte('t');
-}
+
+
+
 
 //int main(void)
 //{

@@ -23,10 +23,12 @@
 #include "uart.h"
 #include "flash.h"
 #include "xmodem.h"
+#include "enterID.h"
 #include "intrinsics.h"
 
 #define HEADER 0x200
 #define MAX_DOWNLOAD_BYTES   (1024 * 16 + HEADER)
+
 
 /* Private typedef -----------------------------------------------------------*/
 typedef void (application_t) (void);
@@ -49,6 +51,14 @@ typedef union download
   uint32_t        forFlash[MAX_DOWNLOAD_BYTES/4];
 } download_t;
 
+typedef enum
+{
+  initialMode,
+  enterIDMode,
+  enterChMode,
+  enterFreqMode,
+} inputMode_t;
+
 /* Private variables ---------------------------------------------------------*/
 extern const uint32_t app_vector;   // Application vector address symbol from 
                                     // the linker configuration file
@@ -61,7 +71,7 @@ volatile uint32_t stack_arr[100]    = {0}; // Allocate some stack
                                                // correctly.
 download_t buffer;
 int xmodemResult = 0;
-
+inputMode_t mode = initialMode;
 volatile uint32_t sysTickCounter = 0;
 char *errorFile;
 int errorLine;
@@ -94,18 +104,20 @@ int main(void)
   SystemClock_Config();
 
   gpioInit();
-  uartInit(115200);
+  uartInit(4800);
   xmodenInit(inbyte,outbyte);
   
   /* Initialize interrupts */
   MX_NVIC_Init();
- 
-  gpioSetPC3();
-  gpioClearPC3();              //to enable RX
-      
-  
+
+  gpioTxEn();
+  HAL_Delay(10);   
+
   /* Output a message on Hyperterminal using printf function */
   printf("\n\r Start bootloader software\n\r");
+  
+  gpioRxEn();
+  HAL_Delay(10);
   uartStartRX();    
   /* Infinite loop */
 
@@ -116,53 +128,80 @@ int main(void)
     {
       char data = uartGetData();
       
-      outbyte(data);
-      switch(data)
+      //outbyte(data);
+      gpioTxEn();
+      HAL_Delay(10);
+      if(mode == initialMode)
       {
-        case 'd':         //download file using xmodem
-          printf("\n\r File>Transfer>XMODEM>Send...\n\r");
-          xmodemResult = xmodemReceive(buffer.forXModem.body,MAX_DOWNLOAD_BYTES - HEADER);
-          if(xmodemResult < 0)printf("\n\r error %d during downloading\n\r", xmodemResult);
-          else
-          {
-            printf("\n\r read %d bytes\n\r", xmodemResult);
-            xmodemResult  = flashFillMemory(buffer.forFlash,MAX_DOWNLOAD_BYTES/4);
-            switch(xmodemResult)
+        switch(data)
+        {
+          case 'd':         //download file using xmodem
+            printf("\n\r File>Send File...\n\r");
+            gpioRxEn();
+            HAL_Delay(10);
+            xmodemResult = xmodemReceive(buffer.forXModem.body,MAX_DOWNLOAD_BYTES - HEADER);
+            gpioTxEn();
+            HAL_Delay(10);
+            if(xmodemResult < 0) // if something wrong has happend during downloading
             {
-            case 0:
-              printf(" Data was successfully written in Flash memory.\n\r");
-              break;
-            case 1:
-              printf(" Error occurred while sector erase.\n\r ");
-              break;
-            case 2:
-              printf(" Error occurred while writing data in Flash memory.\n\r");
-              break;
+              switch(xmodemResult)
+              {
+                case -1:
+                  printf("\n\r time out\n\r");
+                  break;
+                case -2:
+                  printf("\n\r inappropriate file\n\r");
+                  break;
+              default:
+                  printf("\n\r error %d \n\r", xmodemResult);
+              }
             }
-          }
-          break;
-        case 'j':         //write buffer to sector 4
-          printf("\n\r Jump to application\n\r");
-          goToApp();
-          break;
-        case 's':         //jump from bootloader to application
-          printf("\n\r Serial number - 00001\n\r");
-          break;
-        case 'v':
-          printf("\n\r Software version - V00.1\n\r");
-          break;
-        case 'e':
-          printf("\n\r Enter parameter to edit\n\r");
-          break;
-        case 'h':
-          printf("\n\r d - Download image");
-          printf("\n\r j - Start application");
-          printf("\n\r s - Show device serial number");
-          printf("\n\r v - Show software version");
-          printf("\n\r e - Edit parameters\n\r");
-          break;
+            else
+            {
+              printf("\n\r read %d bytes\n\r", xmodemResult);
+              xmodemResult  = flashFillMemory(buffer.forFlash,MAX_DOWNLOAD_BYTES/4);
+              switch(xmodemResult)
+              {
+              case 0:
+                printf(" Data was successfully written in Flash memory.\n\r");
+                break;
+              case 1:
+                printf(" Error occurred while sector erase.\n\r ");
+                break;
+              case 2:
+                printf(" Error occurred while writing data in Flash memory.\n\r");
+                break;
+              }
+            }
+            break;
+          case 'j':         //write buffer to sector 4
+            printf("\n\r Jump to application\n\r");
+            goToApp();
+            break;
+          case 's':         //jump from bootloader to application
+            printf("\n\r Serial number - 00001\n\r");
+            break;
+          case 'v':
+            printf("\n\r Software version - V00.1\n\r");
+            break;
+          case 'e':
+            printf("\n\r Enter parameter to edit\n\r");
+            break;
+          case 'h':
+            printf("\n\r d - Download image");
+            printf("\n\r j - Start application");
+            printf("\n\r i - Enter Device ID");
+            printf("\n\r m - Enter mode");
+            printf("\n\r c - Enter channel\n\r");
+            break;
+        }
       }
-      
+      else if (mode == enterIDMode)
+      {
+        if(enterID(data) == -1)mode = initialMode;
+      }
+      gpioRxEn();
+      HAL_Delay(10);
       uartStartRX(); 
     }
 

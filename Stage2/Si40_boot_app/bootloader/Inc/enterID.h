@@ -7,8 +7,8 @@
   ******************************************************************************
   */
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __GPIO_H
-#define __GPIO_H
+#ifndef __ENTERID_H
+#define __ENTERID_H
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f2xx_hal.h"
@@ -18,28 +18,12 @@
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
 /**
-  * @brief  initializing all GPIOs
-  * @param  None
-  * @retval None
+  * @brief  mode for entring device ID  consists of 4 digits
+  *             write device ID into EEPROM
+  * called every time when key pressed
+  * @param  data from terminal, accepts only 4 charscter if they are digits
+  * @retval -1 exit from mode
+  *          0 stay in mode 
   */
-void gpioInit(void);
-/**
-  * @brief  set GPIOC 3, close U2
-  * @param  None
-  * @retval None
-  */
-void gpioTxEn(void);
-/**
-  * @brief  clear GPIOC 3, open U2
-  * @param  None
-  * @retval None
-  */
-void gpioRxEn(void);
-/**
-  * @brief  deinitializing all GPIOs
-  * @param  None
-  * @retval None
-  */
-void gpioDeInit(void);
-
-#endif /* __GPIO_H */
+int enterID(unsigned char data);
+#endif /* __ENTERID_H */

@@ -50,11 +50,11 @@ void gpioDeInit(void)
   HAL_GPIO_DeInit(GPIOC, GPIO_PIN_3);
 }
 /**
-  * @brief  set GPIOC 3
+  * @brief  set GPIOC 3, close U2
   * @param  None
   * @retval None
   */
-void gpioSetPC3(void)
+void gpioTxEn(void)
 {
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_SET);
 }
@@ -64,7 +64,7 @@ void gpioSetPC3(void)
   * @param  None
   * @retval None
   */
-void gpioClearPC3(void)
+void gpioRxEn(void)
 {
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_RESET);
 }

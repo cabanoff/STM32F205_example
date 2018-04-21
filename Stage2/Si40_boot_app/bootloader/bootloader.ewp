@@ -2049,6 +2049,9 @@
                 <name>$PROJ_DIR$\bootloader_main.c</name>
             </file>
             <file>
+                <name>$PROJ_DIR$\Src\enterID.c</name>
+            </file>
+            <file>
                 <name>$PROJ_DIR$\Src\flash.c</name>
             </file>
             <file>
