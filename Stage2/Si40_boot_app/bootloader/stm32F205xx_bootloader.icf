@@ -20,7 +20,7 @@ define region RAM_region   = mem:[from __ICFEDIT_region_RAM_start__   to __ICFED
 define block CSTACK    with alignment = 8, size = __ICFEDIT_size_cstack__   { };
 define block HEAP      with alignment = 8, size = __ICFEDIT_size_heap__     { };
 
-define exported symbol app_vector = 0x08010200;
+define exported symbol app_vector = 0x08010000;
 
 initialize by copy { readwrite };
 do not initialize  { section .noinit };

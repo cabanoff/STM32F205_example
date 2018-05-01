@@ -634,7 +634,7 @@
                 <option>
                     <name>OOCOutputFormat</name>
                     <version>3</version>
-                    <state>2</state>
+                    <state>3</state>
                 </option>
                 <option>
                     <name>OCOutputOverride</name>
@@ -642,7 +642,7 @@
                 </option>
                 <option>
                     <name>OOCOutputFile</name>
-                    <state>application.txt</state>
+                    <state>application.bin</state>
                 </option>
                 <option>
                     <name>OOCCommandLineProducer</name>
@@ -825,7 +825,7 @@
                 </option>
                 <option>
                     <name>DoFill</name>
-                    <state>0</state>
+                    <state>1</state>
                 </option>
                 <option>
                     <name>FillerByte</name>
@@ -833,20 +833,20 @@
                 </option>
                 <option>
                     <name>FillerStart</name>
-                    <state>0x0</state>
+                    <state>0x08010000</state>
                 </option>
                 <option>
                     <name>FillerEnd</name>
-                    <state>0x0</state>
+                    <state>0x08011FFC</state>
                 </option>
                 <option>
                     <name>CrcSize</name>
                     <version>0</version>
-                    <state>1</state>
+                    <state>2</state>
                 </option>
                 <option>
                     <name>CrcAlign</name>
-                    <state>1</state>
+                    <state>4</state>
                 </option>
                 <option>
                     <name>CrcPoly</name>
@@ -864,11 +864,11 @@
                 </option>
                 <option>
                     <name>CrcInitialValue</name>
-                    <state>0x0</state>
+                    <state>0xFFFFFFFF</state>
                 </option>
                 <option>
                     <name>DoCrc</name>
-                    <state>0</state>
+                    <state>1</state>
                 </option>
                 <option>
                     <name>IlinkBE8Slave</name>
@@ -908,7 +908,7 @@
                 </option>
                 <option>
                     <name>IlinkCrcUseAsInput</name>
-                    <state>1</state>
+                    <state>0</state>
                 </option>
                 <option>
                     <name>IlinkOptInline</name>
@@ -953,12 +953,12 @@
                 <option>
                     <name>CrcAlgorithm</name>
                     <version>1</version>
-                    <state>1</state>
+                    <state>2</state>
                 </option>
                 <option>
                     <name>CrcUnitSize</name>
                     <version>0</version>
-                    <state>0</state>
+                    <state>2</state>
                 </option>
                 <option>
                     <name>IlinkThreadsSlave</name>
@@ -2071,6 +2071,9 @@
             </file>
             <file>
                 <name>$PROJ_DIR$\..\common\Drivers\STM32F2xx_HAL_Driver\Src\stm32f2xx_hal_cortex.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\common\Drivers\STM32F2xx_HAL_Driver\Src\stm32f2xx_hal_crc.c</name>
             </file>
             <file>
                 <name>$PROJ_DIR$\..\common\Drivers\STM32F2xx_HAL_Driver\Src\stm32f2xx_hal_dma.c</name>

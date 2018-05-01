@@ -3,7 +3,7 @@
  *      Flash:           0x08000000 - 0x0801FFFF (128 KB)
  *      Bootloader:      0x08000000 - 0x0800BFFF (48 KB)
  *      EEPROM:          0x0800C000 - 0x0800FFFF (16 KB)
- *      Application:     0x08010200 - 0x0801FFFF (64KB)
+ *      Application:     0x08010000 - 0x0801FFFF (64KB)
 
 
   ******************************************************************************
@@ -25,9 +25,9 @@
 #include "xmodem.h"
 #include "enterID.h"
 #include "intrinsics.h"
+#include "crc.h"
 
-#define HEADER 0x200
-#define MAX_DOWNLOAD_BYTES   (1024 * 16 + HEADER)
+#define MAX_DOWNLOAD_BYTES   (1024 * 8)
 
 
 /* Private typedef -----------------------------------------------------------*/
@@ -39,15 +39,10 @@ typedef struct vector
     application_t   *func_p;        // intvec[1] is initial Program Counter
 } vector_t;
 
-typedef struct 
-{
-  unsigned char header[HEADER];
-  unsigned char body[MAX_DOWNLOAD_BYTES - HEADER];
-} forXModem_t;
 
 typedef union download
 {  
-  forXModem_t     forXModem;
+  unsigned char   forXModem[MAX_DOWNLOAD_BYTES + 40];
   uint32_t        forFlash[MAX_DOWNLOAD_BYTES/4];
 } download_t;
 
@@ -109,7 +104,6 @@ int main(void)
   
   /* Initialize interrupts */
   MX_NVIC_Init();
-
   gpioTxEn();
   HAL_Delay(10);   
 
@@ -139,7 +133,7 @@ int main(void)
             printf("\n\r File>Send File...\n\r");
             gpioRxEn();
             HAL_Delay(10);
-            xmodemResult = xmodemReceive(buffer.forXModem.body,MAX_DOWNLOAD_BYTES - HEADER);
+            xmodemResult = xmodemReceive(buffer.forXModem, MAX_DOWNLOAD_BYTES);
             gpioTxEn();
             HAL_Delay(10);
             if(xmodemResult < 0) // if something wrong has happend during downloading
@@ -159,6 +153,7 @@ int main(void)
             else
             {
               printf("\n\r read %d bytes\n\r", xmodemResult);
+              xmodemResult = crcCompare(buffer.forFlash,MAX_DOWNLOAD_BYTES/4 - 1,buffer.forFlash[(MAX_DOWNLOAD_BYTES/4)-1]);
               xmodemResult  = flashFillMemory(buffer.forFlash,MAX_DOWNLOAD_BYTES/4);
               switch(xmodemResult)
               {

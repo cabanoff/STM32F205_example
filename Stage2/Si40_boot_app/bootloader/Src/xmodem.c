@@ -36,16 +36,9 @@
 
 //#include "crc16.h"
 #include "xmodem.h"
-#include <string.h>
+//#include <string.h>
 #include "intrinsics.h"
 
-#define SOH  0x01
-#define STX  0x02
-#define EOT  0x04
-#define ACK  0x06
-#define NAK  0x15
-#define CAN  0x18
-#define CTRLZ 0x1A
 
 #define DLY_1S (1000)
 #define MAXRETRANS 25
@@ -135,7 +128,7 @@ static int convStr2Byte(unsigned char *str2Byte)
 
 int xmodemReceive(unsigned char *dest, int destsz)
 {
-  unsigned char header[] = {"@08010200"};
+  unsigned char header[] = {"@08010000"};
   unsigned char str2Byte[3];
   int inData = -1;
   int pointer = 0;
@@ -147,7 +140,7 @@ int xmodemReceive(unsigned char *dest, int destsz)
   }
   if(inData < 0)return -1;
   /*
-   * receive header @08010200\n
+   * receive header @08010000\n
   */
   for(unsigned int i =0; i < sizeof(header)-1;i++)
   {
@@ -164,14 +157,16 @@ int xmodemReceive(unsigned char *dest, int destsz)
     for(int i = 0; i < 3; i++)
     {
       inData = _inbyte(DLY_1S*2);
-      if(inData < 0)return flushinput(-3);
-      if(inData == 'q')return flushinput(pointer); // file received
+      if(inData < 0)return flushinput(-3);      
       str2Byte[i] = inData;
     }
     inData = convStr2Byte(str2Byte);
     if(inData >= 0)dest[pointer++] = inData;
     else return flushinput(-4);   
   }
+  inData = _inbyte(DLY_1S*2);  //receive end of file
+  if(inData < 0)return flushinput(-3); 
+  if(inData == 'q')return flushinput(pointer); // file received
   return flushinput(-5);  // file too big
 }
 

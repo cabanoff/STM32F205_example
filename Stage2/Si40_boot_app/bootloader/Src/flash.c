@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    uart.c 
+  * @file    flash.c 
   * @author  AKabanov
   * @brief   all routines connected with code downloading into flash memory
   ******************************************************************************

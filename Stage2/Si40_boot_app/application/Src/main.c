@@ -28,8 +28,22 @@
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
+extern uint32_t __checksum;                                 // import checksum
+  #pragma section=".intvec"                                       // will use information about sectors
+  #pragma section=".checksum"                                     // 
 /* Private variables ---------------------------------------------------------*/
 static GPIO_InitTypeDef  GPIO_InitStruct;
+/* CRC handler declaration */
+CRC_HandleTypeDef   CrcHandle;
+
+uint32_t* begin = (uint32_t*)__section_begin(".intvec");      // begin of data memory
+uint32_t* end = (uint32_t*)__section_begin(".checksum");      // begin of CRC
+//uint32_t* ptr = begin;
+uint32_t delay = 1000;
+uint32_t calculated_crc;
+uint32_t read_crc;
+uint32_t length;
+
 
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
@@ -60,7 +74,7 @@ int main(void)
   HAL_Init();
   
   /* Configure the system clock to 120 MHz */
-  SystemClock_Config();
+  //SystemClock_Config();
   
   /* -1- Enable GPIOA (to be able to program the configuration registers) */
   __HAL_RCC_GPIOA_CLK_ENABLE();
@@ -74,15 +88,43 @@ int main(void)
   
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
   
+  /*
+  *     Check crc section 0x8010000 - 0x8013FFC  16 kBytes
+  */
+  /*##-1- Configure the CRC peripheral #######################################*/
+  CrcHandle.Instance = CRC; 
+  if(HAL_CRC_Init(&CrcHandle) != HAL_OK)
+  {
+    /* Initialization Error */
+    Error_Handler();
+  }                              
+  /*##-2- Compute the CRC of "aDataBuffer" ###################################*/
+  length = (end - begin)*sizeof(end);
+  calculated_crc = HAL_CRC_Accumulate(&CrcHandle, begin, length);
+  read_crc = __checksum;
+  if(HAL_CRC_DeInit(&CrcHandle) != HAL_OK)
+  {
+    /* Initialization Error */
+    Error_Handler();
+  }    
+  /*##-3- Compare the CRC value to the Expected one ##########################*/
+  if (calculated_crc != read_crc)
+  {
+    delay = 1000;// CRC does not correspond
+  }
+  else
+  {
+    delay = 2000;// CRC corresponds
+  }
+
 
 
   /* -3- Toggle PA.0 IOs in an infinite loop */  
   while (1)
   {
     HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_0);
-    /* Insert delay 1000 ms */
-    HAL_Delay(1000);
-    //for(uint32_t i = 0 ; i < 60000000;i++)__no_operation();
+    /* Insert delay 1000 ms or 2000*/
+    HAL_Delay(delay);
   }
 }
 

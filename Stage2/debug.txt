@@ -1,0 +1,29 @@
+1 Проблема - не считается CRC 
+HAL_CRC_Calculate(&CrcHandle,(uint32_t *)aDataBuffer, BUFFER_SIZE); возвращает 0
+в примере эта же функция возвращает нормальное значение
+
+Решение - stm32f2xx_hal_msp.c
+Добавлены
+void HAL_CRC_MspInit(CRC_HandleTypeDef *hcrc)
+{
+   /* CRC Peripheral clock enable */
+  __HAL_RCC_CRC_CLK_ENABLE();
+}
+
+/**
+  * @brief CRC MSP De-Initialization 
+  *        This function freeze the hardware resources used in this example:
+  *          - Disable the Peripheral's clock
+  * @param hcrc: CRC handle pointer
+  * @retval None
+  */
+void HAL_CRC_MspDeInit(CRC_HandleTypeDef *hcrc)
+{
+  /* Enable CRC reset state */
+  __HAL_RCC_CRC_FORCE_RESET();
+  
+  /* Release CRC from reset state */
+  __HAL_RCC_CRC_RELEASE_RESET();
+}
+
+Вывод:  stm32f2xx_hal_msp.c - примера требуется изучать внимательно!!

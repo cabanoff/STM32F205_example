@@ -2044,9 +2044,42 @@
             </file>
         </group>
         <group>
+            <name>Inc</name>
+            <file>
+                <name>$PROJ_DIR$\Inc\crc.h</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\Inc\enterID.h</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\Inc\flash.h</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\Inc\gpio.h</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\Inc\main.h</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\Inc\stm32f2xx_hal_conf.h</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\Inc\stm32f2xx_it.h</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\Inc\uart.h</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\Inc\xmodem.h</name>
+            </file>
+        </group>
+        <group>
             <name>User</name>
             <file>
                 <name>$PROJ_DIR$\bootloader_main.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\Src\crc.c</name>
             </file>
             <file>
                 <name>$PROJ_DIR$\Src\enterID.c</name>
@@ -2086,6 +2119,9 @@
             </file>
             <file>
                 <name>$PROJ_DIR$\..\common\Drivers\STM32F2xx_HAL_Driver\Src\stm32f2xx_hal_cortex.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\common\Drivers\STM32F2xx_HAL_Driver\Src\stm32f2xx_hal_crc.c</name>
             </file>
             <file>
                 <name>$PROJ_DIR$\..\common\Drivers\STM32F2xx_HAL_Driver\Src\stm32f2xx_hal_dma.c</name>
