@@ -39,8 +39,14 @@ uint32_t calculatedCrc = 0;
   * @retval 0 - crc corresponds
   *         -1 - doesn't corresspond
   */
+uint32_t* debBegin;
+uint32_t debLength;
+uint32_t debCRC;
 int crcCompare(uint32_t* begin, uint32_t length, uint32_t crc)
 {
+  debBegin = begin;
+  debLength = length;
+  debCRC = crc;
  /*##-1- Configure the CRC peripheral #######################################*/
   CrcHandle.Instance = CRC; 
   if(HAL_CRC_Init(&CrcHandle) != HAL_OK)

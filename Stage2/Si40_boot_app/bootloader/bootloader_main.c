@@ -51,7 +51,7 @@ typedef enum
   initialMode,
   enterIDMode,
   enterChMode,
-  enterFreqMode,
+  enterModeMode,
 } inputMode_t;
 
 /* Private variables ---------------------------------------------------------*/
@@ -141,46 +141,57 @@ int main(void)
               switch(xmodemResult)
               {
                 case -1:
-                  printf("\n\r time out\n\r");
+                  printf("\n\r time out.\n\r");
                   break;
                 case -2:
-                  printf("\n\r inappropriate file\n\r");
+                  printf("\n\r inappropriate file.\n\r");
                   break;
               default:
-                  printf("\n\r error %d \n\r", xmodemResult);
+                  printf("\n\r error %d .\n\r", xmodemResult);
               }
             }
             else
             {
-              printf("\n\r read %d bytes\n\r", xmodemResult);
+              printf("\n\r read %d bytes.\n\r", xmodemResult);
               xmodemResult = crcCompare(buffer.forFlash,MAX_DOWNLOAD_BYTES/4 - 1,buffer.forFlash[(MAX_DOWNLOAD_BYTES/4)-1]);
-              xmodemResult  = flashFillMemory(buffer.forFlash,MAX_DOWNLOAD_BYTES/4);
-              switch(xmodemResult)
+              if(xmodemResult == 0)
               {
-              case 0:
-                printf(" Data was successfully written in Flash memory.\n\r");
-                break;
-              case 1:
-                printf(" Error occurred while sector erase.\n\r ");
-                break;
-              case 2:
-                printf(" Error occurred while writing data in Flash memory.\n\r");
-                break;
+                xmodemResult  = flashFillMemory(buffer.forFlash,MAX_DOWNLOAD_BYTES/4);
+                switch(xmodemResult)
+                {
+                case 0:
+                  printf(" Data was successfully written in Flash memory.\n\r");
+                  break;
+                case 1:
+                  printf(" Error occurred while sector erase.\n\r ");
+                  break;
+                case 2:
+                  printf(" Error occurred while writing data in Flash memory.\n\r");
+                  break;
+                }
               }
+              else printf("CRC of downladed file does not match.\n\r");            
             }
             break;
-          case 'j':         //write buffer to sector 4
-            printf("\n\r Jump to application\n\r");
-            goToApp();
+          case 'j':         //jump from bootloader to application
+            xmodemResult = crcCompare((uint32_t*)&app_vector, MAX_DOWNLOAD_BYTES/4 - 1, *(uint32_t*)(&app_vector + MAX_DOWNLOAD_BYTES/4 - 1));
+            if(xmodemResult == 0)
+            {
+              printf("\n\r Exit from bootloader.\n\r");
+              printf("Go to application.\n\r");
+              goToApp();
+            }
+            else printf("\n\r Application doesn't exist.\n\r");
             break;
-          case 's':         //jump from bootloader to application
-            printf("\n\r Serial number - 00001\n\r");
+          case 'i':         
+            printf("\n\r Enter 4 digits of device ID.\n\r");
+            mode = enterIDMode;
             break;
           case 'v':
-            printf("\n\r Software version - V00.1\n\r");
+            printf("\n\r Software version - V00.1.\n\r");
             break;
           case 'e':
-            printf("\n\r Enter parameter to edit\n\r");
+            printf("\n\r Enter parameter to edit.\n\r");
             break;
           case 'h':
             printf("\n\r d - Download image");
