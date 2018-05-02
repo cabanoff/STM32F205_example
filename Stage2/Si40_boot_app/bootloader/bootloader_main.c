@@ -23,7 +23,7 @@
 #include "uart.h"
 #include "flash.h"
 #include "xmodem.h"
-#include "enterID.h"
+#include "eeprom.h"
 #include "intrinsics.h"
 #include "crc.h"
 
@@ -31,7 +31,7 @@
 #define MAX_DOWNLOAD_BYTES   (1024 * MAX_DOWNLOADED_KBYTES)
 #define BOOT_VER        1
 #define BOOT_SUB_VER    5
-#define BOOT_BUILD      17
+#define BOOT_BUILD      21
 #define APP_VER        appVer.buffVer[0]
 #define APP_SUB_VER    appVer.buffVer[1]
 #define APP_BUILD      appVer.buffVer[2]
@@ -86,6 +86,7 @@ volatile uint32_t sysTickCounter = 0;
 char *errorFile;
 int errorLine;
 version_t appVer;
+
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_NVIC_Init(void);
@@ -133,7 +134,18 @@ int main(void)
   {
     printf(" Application version %d.%d build %d.\n\r", APP_VER, APP_SUB_VER, APP_BUILD);
   }
-  else printf("\n\r Application doesn't exist.\n\r");
+  else printf(" Application doesn't exist.\n\r");
+  int ID = eepromGetID();
+  if(ID < 0) printf(" Devise ID doesn't exist.\n\r");
+  else printf(" Devise ID %d.\n\r",ID);
+  
+  int Channel = eepromGetChannel();
+  if(Channel < 0) printf(" Channel hasn't chosen.\n\r");
+  else printf(" Channel %d.\n\r",Channel);
+  
+  int Mode = eepromGetMode();
+  if(Mode < 0) printf(" Mode hasn't chosen.\n\r");
+  else printf(" Mode %d.\n\r",Mode);
   
   gpioRxEn();
   HAL_Delay(10);
@@ -241,7 +253,7 @@ int main(void)
       }
       else if (mode == enterIDMode)
       {
-        if(enterID(data) == -1)mode = initialMode;
+        if(eepromEnterID(data) == -1)mode = initialMode;
       }
       gpioRxEn();
       HAL_Delay(10);

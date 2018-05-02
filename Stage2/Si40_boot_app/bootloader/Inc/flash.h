@@ -47,6 +47,17 @@ uint8_t flashErase4Sector(void);
   */
 
 uint8_t flashFillMemory(uint32_t* buffer, uint32_t length);
+ /**
+  * @brief  read EEPROM area
+  * @param  buffer for data read
+  *         length number of words to read
+  * @note   read from 0x8008000 
+  *         
+  * @retval 0 - successful reading
+  *         1 - error during reading
+  *         
+  */
+uint8_t flashReadEEPROM(uint32_t* buffer, uint32_t length);
 /**
   * @brief  None
   * @param  None

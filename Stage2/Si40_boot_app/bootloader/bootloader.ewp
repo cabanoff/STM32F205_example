@@ -2082,7 +2082,7 @@
                 <name>$PROJ_DIR$\Src\crc.c</name>
             </file>
             <file>
-                <name>$PROJ_DIR$\Src\enterID.c</name>
+                <name>$PROJ_DIR$\Src\eeprom.c</name>
             </file>
             <file>
                 <name>$PROJ_DIR$\Src\flash.c</name>

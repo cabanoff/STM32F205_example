@@ -29,7 +29,7 @@
 /* Private define ------------------------------------------------------------*/
 #define APP_VER        1
 #define APP_SUB_VER    2
-#define APP_BUILD      33
+#define APP_BUILD      36
 #define APP_CHECK      (APP_VER + APP_SUB_VER + APP_BUILD)
 /* Private macro -------------------------------------------------------------*/
 extern uint32_t __checksum;                                 // import checksum
