@@ -1,9 +1,9 @@
 /*
  * STM32F205RB 
  *      Flash:           0x08000000 - 0x0801FFFF (128 KB)
- *      Bootloader:      0x08000000 - 0x0800BFFF (48 KB)
- *      EEPROM:          0x0800C000 - 0x0800FFFF (16 KB)
- *      Application:     0x08010000 - 0x0801FFFF (64KB)
+ *      Bootloader:      0x08000000 - 0x08007FFF (32 KB)
+ *      EEPROM:          0x08008000 - 0x0800FFFF (32 KB)
+ *      Application:     0x08010000 - 0x08011FFF (8KB)
 
 
   ******************************************************************************
@@ -27,7 +27,16 @@
 #include "intrinsics.h"
 #include "crc.h"
 
-#define MAX_DOWNLOAD_BYTES   (1024 * 8)
+#define MAX_DOWNLOADED_KBYTES 8
+#define MAX_DOWNLOAD_BYTES   (1024 * MAX_DOWNLOADED_KBYTES)
+#define BOOT_VER        1
+#define BOOT_SUB_VER    5
+#define BOOT_BUILD      17
+#define APP_VER        appVer.buffVer[0]
+#define APP_SUB_VER    appVer.buffVer[1]
+#define APP_BUILD      appVer.buffVer[2]
+#define APP_CHECK      appVer.buffVer[3]
+#define APP_SUMM      (APP_VER + APP_SUB_VER + APP_BUILD)
 
 
 /* Private typedef -----------------------------------------------------------*/
@@ -54,6 +63,12 @@ typedef enum
   enterModeMode,
 } inputMode_t;
 
+typedef union
+{
+  uint32_t uiVer;
+  unsigned char buffVer[4];
+} version_t;
+
 /* Private variables ---------------------------------------------------------*/
 extern const uint32_t app_vector;   // Application vector address symbol from 
                                     // the linker configuration file
@@ -70,6 +85,7 @@ inputMode_t mode = initialMode;
 volatile uint32_t sysTickCounter = 0;
 char *errorFile;
 int errorLine;
+version_t appVer;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_NVIC_Init(void);
@@ -108,7 +124,16 @@ int main(void)
   HAL_Delay(10);   
 
   /* Output a message on Hyperterminal using printf function */
+  appVer.uiVer = *(uint32_t*)(&app_vector + MAX_DOWNLOAD_BYTES/4 - 1);  //reading
   printf("\n\r Start bootloader software\n\r");
+  printf(" Bootloader version %d.%d build %d.\n\r", BOOT_VER, BOOT_SUB_VER, BOOT_BUILD);
+  appVer.uiVer = *(uint32_t*)(&app_vector + MAX_DOWNLOAD_BYTES/4 - 2);
+  if((crcCompare((uint32_t*)&app_vector, MAX_DOWNLOAD_BYTES/4 - 1, *(uint32_t*)(&app_vector + MAX_DOWNLOAD_BYTES/4 - 1)) == 0)&&
+    (APP_CHECK == APP_SUMM))
+  {
+    printf(" Application version %d.%d build %d.\n\r", APP_VER, APP_SUB_VER, APP_BUILD);
+  }
+  else printf("\n\r Application doesn't exist.\n\r");
   
   gpioRxEn();
   HAL_Delay(10);
@@ -153,32 +178,44 @@ int main(void)
             else
             {
               printf("\n\r read %d bytes.\n\r", xmodemResult);
-              xmodemResult = crcCompare(buffer.forFlash,MAX_DOWNLOAD_BYTES/4 - 1,buffer.forFlash[(MAX_DOWNLOAD_BYTES/4)-1]);
-              if(xmodemResult == 0)
+              xmodemResult = crcCompare(buffer.forFlash,MAX_DOWNLOAD_BYTES/4 - 1,buffer.forFlash[(MAX_DOWNLOAD_BYTES/4)-1]); 
+              appVer.uiVer = buffer.forFlash[(MAX_DOWNLOAD_BYTES/4)-2];  //read application version
+              if((xmodemResult == 0)&&(APP_CHECK == APP_SUMM))
               {
+                printf(" Application version %d.%d build %d, press 'y' to write in Flash memory.\n\r", APP_VER, APP_SUB_VER, APP_BUILD);
+              }
+              else printf("CRC or Version number of downladed file is not correct.\n\r");            
+            }
+            break;
+          case 'y':
+            xmodemResult = crcCompare(buffer.forFlash,MAX_DOWNLOAD_BYTES/4 - 1,buffer.forFlash[(MAX_DOWNLOAD_BYTES/4)-1]); 
+            appVer.uiVer = buffer.forFlash[(MAX_DOWNLOAD_BYTES/4)-2];  //read application version
+            if((xmodemResult == 0)&&(APP_CHECK == APP_SUMM))   //data in buffer is valid application code
+            {
                 xmodemResult  = flashFillMemory(buffer.forFlash,MAX_DOWNLOAD_BYTES/4);
                 switch(xmodemResult)
                 {
                 case 0:
-                  printf(" Data was successfully written in Flash memory.\n\r");
+                  printf("\n\r Data was successfully written in Flash memory.\n\r");
                   break;
                 case 1:
-                  printf(" Error occurred while sector erase.\n\r ");
+                  printf("\n\r Error occurred while Flash erase.\n\r ");
                   break;
                 case 2:
-                  printf(" Error occurred while writing data in Flash memory.\n\r");
+                  printf("\n\r Error occurred while writing data in Flash memory.\n\r");
                   break;
                 }
-              }
-              else printf("CRC of downladed file does not match.\n\r");            
             }
-            break;
+            else printf("Buffer doesn't contain valid application code.\n\r"); // data in buffer is not application code
+            
+          break;
           case 'j':         //jump from bootloader to application
             xmodemResult = crcCompare((uint32_t*)&app_vector, MAX_DOWNLOAD_BYTES/4 - 1, *(uint32_t*)(&app_vector + MAX_DOWNLOAD_BYTES/4 - 1));
-            if(xmodemResult == 0)
+            appVer.uiVer = *(uint32_t*)(&app_vector + MAX_DOWNLOAD_BYTES/4 - 2);
+            if((xmodemResult == 0)&&(APP_CHECK == APP_SUMM))
             {
               printf("\n\r Exit from bootloader.\n\r");
-              printf("Go to application.\n\r");
+              printf(" Go to application.\n\r");
               goToApp();
             }
             else printf("\n\r Application doesn't exist.\n\r");

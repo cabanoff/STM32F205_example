@@ -26,4 +26,16 @@ void HAL_CRC_MspDeInit(CRC_HandleTypeDef *hcrc)
   __HAL_RCC_CRC_RELEASE_RESET();
 }
 
-Вывод:  stm32f2xx_hal_msp.c - примера требуется изучать внимательно!!
+Вывод:  stm32f2xx_hal_msp.c - из примера требуется изучать внимательно!!
+
+2.
+Запись по определённому адресу - *(__IO uint32_t*)Address = Data;
+Address = 0x8010000 + n*4
+Чтение по определённому адресу 
+
+data32 = *(uint32_t*)(&app_vector + MAX_DOWNLOAD_BYTES/4 - 1)
+3.
+чтоб записать версию по определённому адресу - воспользоваться https://www.iar.com/support/tech-notes/linker/how-do-i-place-a-group-of-functions-or-variables-in-a-specific-section/
+а так же использовать данную переменную в программе
+
+version[0] = appVer[0];
