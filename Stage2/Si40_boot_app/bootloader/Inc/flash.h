@@ -14,6 +14,12 @@
 #include "stm32f2xx_hal.h"
 
 /* Exported types ------------------------------------------------------------*/
+typedef    enum
+{
+  bootSector = 1,
+  eepromSector = 3,
+  appSector = 4,
+} sector_t;
 /* Exported constants --------------------------------------------------------*/
 
 /* Exported macro ------------------------------------------------------------*/
@@ -27,26 +33,19 @@
 
 /* Exported functions ------------------------------------------------------- */
 
-/**
-  * @brief  erase sector 4 0x801 0000 - 0x801 FFFF
-  * @param  None
-  * @note   None
-  *         
-  * @retval 1 - successful erasure 0 - error during erasure
-  */
-
-uint8_t flashErase4Sector(void);
-    
-/**
+ /**
   * @brief  fill flash memory with data in buffer
   * @param  buffer pointer to buffer
-  *         length - data length
+  *         length - data length in words(4 bytes)
   * @note   None
   *         
-  * @retval 1 - successful downloading 0 - error during downloading
+  * @retval 0 - successful downloading
+  *         1 - error during erasing
+  *         2 - error during downloading
+  *         3 - buffer to large
+  *         4 - not valid sector
   */
-
-uint8_t flashFillMemory(uint32_t* buffer, uint32_t length);
+uint8_t flashFillMemory(uint32_t* buffer, uint32_t length,sector_t sector);
  /**
   * @brief  read EEPROM area
   * @param  buffer for data read
@@ -59,10 +58,16 @@ uint8_t flashFillMemory(uint32_t* buffer, uint32_t length);
   */
 uint8_t flashReadEEPROM(uint32_t* buffer, uint32_t length);
 /**
-  * @brief  None
-  * @param  None
-  * @retval None
+  * @brief  write EEPROM area
+  * @param  buffer for data written
+  *         length number of words to write
+  * @note   write to area starting from 0x80080000
+  *         
+  * @retval 0 - successful writing
+  *         1 - error during writing
+  *         
   */
+uint8_t flashWriteEEPROM(uint32_t* buffer, uint32_t length);
 
 
 #endif /* __FLASH_H */

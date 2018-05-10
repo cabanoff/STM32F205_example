@@ -51,4 +51,30 @@ int eepromGetChannel(void);
   *          if channels 31-35 returns 2 - NORMAL
   */
 int eepromGetMode(void);
+ /**
+  * @brief  prepare buffer for entering ID mode
+  *
+  * @param  None
+  * @retval None
+  */
+void eepromIDModePrep(void);
+
+/**
+  * @brief  mode for entring Channel number from 1 to 35
+  *             write Channel into EEPROM
+  * @param  data from terminal, accepts only 2 charscter if they are digits
+  * @retval -1 exit from mode with error
+  *          0 stay in mode 
+  *          1 exit from mode with new Channel number
+  */
+int eepromEnterCh(unsigned char data);
+    
+ /**
+  * @brief  prepare buffer for entering Channel mode
+  *
+  * @param  None
+  * @retval None
+  */
+
+void eepromChModePrep(void);
 #endif /* __EEPROM_H */

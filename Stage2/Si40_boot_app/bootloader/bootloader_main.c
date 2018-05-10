@@ -30,8 +30,8 @@
 #define MAX_DOWNLOADED_KBYTES 8
 #define MAX_DOWNLOAD_BYTES   (1024 * MAX_DOWNLOADED_KBYTES)
 #define BOOT_VER        1
-#define BOOT_SUB_VER    5
-#define BOOT_BUILD      21
+#define BOOT_SUB_VER    6
+#define BOOT_BUILD      37
 #define APP_VER        appVer.buffVer[0]
 #define APP_SUB_VER    appVer.buffVer[1]
 #define APP_BUILD      appVer.buffVer[2]
@@ -90,6 +90,7 @@ version_t appVer;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_NVIC_Init(void);
+static void printDevInfo(void);
 static void goToApp(void);
 int inbyte(unsigned short);
 void outbyte(int);
@@ -125,28 +126,9 @@ int main(void)
   HAL_Delay(10);   
 
   /* Output a message on Hyperterminal using printf function */
-  appVer.uiVer = *(uint32_t*)(&app_vector + MAX_DOWNLOAD_BYTES/4 - 1);  //reading
-  printf("\n\r Start bootloader software\n\r");
-  printf(" Bootloader version %d.%d build %d.\n\r", BOOT_VER, BOOT_SUB_VER, BOOT_BUILD);
-  appVer.uiVer = *(uint32_t*)(&app_vector + MAX_DOWNLOAD_BYTES/4 - 2);
-  if((crcCompare((uint32_t*)&app_vector, MAX_DOWNLOAD_BYTES/4 - 1, *(uint32_t*)(&app_vector + MAX_DOWNLOAD_BYTES/4 - 1)) == 0)&&
-    (APP_CHECK == APP_SUMM))
-  {
-    printf(" Application version %d.%d build %d.\n\r", APP_VER, APP_SUB_VER, APP_BUILD);
-  }
-  else printf(" Application doesn't exist.\n\r");
-  int ID = eepromGetID();
-  if(ID < 0) printf(" Devise ID doesn't exist.\n\r");
-  else printf(" Devise ID %d.\n\r",ID);
-  
-  int Channel = eepromGetChannel();
-  if(Channel < 0) printf(" Channel hasn't chosen.\n\r");
-  else printf(" Channel %d.\n\r",Channel);
-  
-  int Mode = eepromGetMode();
-  if(Mode < 0) printf(" Mode hasn't chosen.\n\r");
-  else printf(" Mode %d.\n\r",Mode);
-  
+  printf("\n\r Start bootloader software");
+  printDevInfo();
+  printf(" Press h for help\n\r"); 
   gpioRxEn();
   HAL_Delay(10);
   uartStartRX();    
@@ -204,7 +186,7 @@ int main(void)
             appVer.uiVer = buffer.forFlash[(MAX_DOWNLOAD_BYTES/4)-2];  //read application version
             if((xmodemResult == 0)&&(APP_CHECK == APP_SUMM))   //data in buffer is valid application code
             {
-                xmodemResult  = flashFillMemory(buffer.forFlash,MAX_DOWNLOAD_BYTES/4);
+                xmodemResult  = flashFillMemory(buffer.forFlash,MAX_DOWNLOAD_BYTES/4,appSector);
                 switch(xmodemResult)
                 {
                 case 0:
@@ -233,27 +215,60 @@ int main(void)
             else printf("\n\r Application doesn't exist.\n\r");
             break;
           case 'i':         
-            printf("\n\r Enter 4 digits of device ID.\n\r");
+            printf("\n\r Enter 4 digits of device ID then press return.\n\r");
+            eepromIDModePrep();
             mode = enterIDMode;
             break;
-          case 'v':
-            printf("\n\r Software version - V00.1.\n\r");
+          case 'c':
+            printf("\n\r Enter frequency channel number(1-35), than press return.\n\r");
+            eepromChModePrep();
+            mode = enterChMode;
             break;
-          case 'e':
-            printf("\n\r Enter parameter to edit.\n\r");
+          case 'm':
+            printf("\n\r Enter mode - F(fast), N(normal), S(slow).\n\r");
+            mode = enterModeMode;
             break;
+          case 'p':
+            printDevInfo();
+            break;  
           case 'h':
             printf("\n\r d - Download image");
             printf("\n\r j - Start application");
             printf("\n\r i - Enter Device ID");
             printf("\n\r m - Enter mode");
-            printf("\n\r c - Enter channel\n\r");
+            printf("\n\r c - Enter channel");
+            printf("\n\r p - Print device information\n\r");
             break;
         }
       }
       else if (mode == enterIDMode)
       {
-        if(eepromEnterID(data) == -1)mode = initialMode;
+        int val = eepromEnterID(data);
+        if( val == -1) //
+        {
+          mode = initialMode;
+          printf("\n\r Error. \n\r");
+        }
+        if(val == 1)
+        {
+          mode = initialMode;
+          printf("\n\r New device ID is %d \n\r", eepromGetID());
+        }         
+      }
+      else if (mode == enterChMode)
+      {
+        int val = eepromEnterCh(data);
+        if( val == -1) //
+        {
+          mode = initialMode;
+          printf("\n\r Error. \n\r");
+        }
+        if(val == 1)
+        {
+          mode = initialMode;
+          printf("\n\r New frequency channel is %d \n\r", eepromGetChannel());
+        }        
+        
       }
       gpioRxEn();
       HAL_Delay(10);
@@ -335,6 +350,30 @@ void outbyte(int c)
 {
   uint8_t data = c;
   uartStartTXBlock(data);
+}
+
+void printDevInfo(void)
+{
+  appVer.uiVer = *(uint32_t*)(&app_vector + MAX_DOWNLOAD_BYTES/4 - 1);  //reading 
+  printf("\n\r Bootloader version %d.%d build %d.\n\r", BOOT_VER, BOOT_SUB_VER, BOOT_BUILD);
+  appVer.uiVer = *(uint32_t*)(&app_vector + MAX_DOWNLOAD_BYTES/4 - 2);
+  if((crcCompare((uint32_t*)&app_vector, MAX_DOWNLOAD_BYTES/4 - 1, *(uint32_t*)(&app_vector + MAX_DOWNLOAD_BYTES/4 - 1)) == 0)&&
+    (APP_CHECK == APP_SUMM))
+  {
+    printf(" Application version %d.%d build %d.\n\r", APP_VER, APP_SUB_VER, APP_BUILD);
+  }
+  else printf(" Application doesn't exist.\n\r");
+  int ID = eepromGetID();
+  if(ID < 0) printf(" Device ID doesn't exist.\n\r");
+  else printf(" Device ID %d.\n\r",ID);
+  
+  int Channel = eepromGetChannel();
+  if(Channel < 0) printf(" Channel isn't set.\n\r");
+  else printf(" Channel %d.\n\r",Channel);
+  
+  int Mode = eepromGetMode();
+  if(Mode < 0) printf(" Mode isn't set.\n\r");
+  else printf(" Mode %d.\n\r",Mode);
 }
 
 /**

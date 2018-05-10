@@ -18,17 +18,15 @@ extern void _Error_Handler(char *, int);
   */ 
 
 /* Private typedef -----------------------------------------------------------*/
+
 /* Private define ------------------------------------------------------------*/
 #define FLASH_CODE_START_ADDR   ((uint32_t)0x08010000)  /* Start @ of code Flash area */
-#define FLASH_USER_END_ADDR     ((uint32_t)0x0801FFFF)/* End @ of code Flash area : sector start address + sector size - 1 */
+#define FLASH_CODE_END_ADDR     ((uint32_t)0x0801FFFF)/* End @ of code Flash area : sector start address + sector size - 1 */
+#define FLASH_EEPROM_START_ADDR ((uint32_t)0x08008000)  /* Start @ of eeprom area */
+#define FLASH_EEPROM_END_ADDR   ((uint32_t)0x0800FFFF)/* End @ of code Flash area : sector start address + sector size - 1 */
 
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-uint32_t FirstSector = 0, NbOfSectors = 0, Address = 0;
-uint32_t SectorError = 0;
-uint32_t * pointer = NULL;
-__IO uint32_t data32 = 0 , MemoryProgramStatus = 0;
-
 /*Variable used for Erase procedure*/
 static FLASH_EraseInitTypeDef EraseInitStruct;
 
@@ -46,18 +44,6 @@ static FLASH_EraseInitTypeDef EraseInitStruct;
 /* Public functions ---------------------------------------------------------*/
 
 /**
-  * @brief  erase sector 4 0x801 0000 - 0x801 FFFF
-  * @param  None
-  * @note   None
-  *         
-  * @retval 1 - successful erasure 0 - error during erasure
-  */
-
-uint8_t flashErase4Sector(void)
-{
-  return 1;
-}
-/**
   * @brief  read EEPROM area
   * @param  buffer for data read
   *         length number of words to read
@@ -69,6 +55,15 @@ uint8_t flashErase4Sector(void)
   */
 uint8_t flashReadEEPROM(uint32_t* buffer, uint32_t length)
 {
+  uint32_t Address = FLASH_EEPROM_START_ADDR;
+  if(length == 0)return 0;
+  if(length > 0x4000UL/4)return 1; //
+  while (Address < (FLASH_EEPROM_START_ADDR + length*4))
+  {
+    *buffer = *(uint32_t*)Address;
+    Address = Address + 4;
+    buffer++;
+  }  
   return 0;
 }
 
@@ -84,30 +79,52 @@ uint8_t flashReadEEPROM(uint32_t* buffer, uint32_t length)
   */
 uint8_t flashWriteEEPROM(uint32_t* buffer, uint32_t length)
 {
+  if(flashFillMemory(buffer, length, eepromSector )!=0)return 1;
   return 0;
 }
 
 /**
   * @brief  fill flash memory with data in buffer
   * @param  buffer pointer to buffer
-  *         length - data length
+  *         length - data length in words(4 bytes)
   * @note   None
   *         
   * @retval 0 - successful downloading
   *         1 - error during erasing
   *         2 - error during downloading
   *         3 - buffer to large
+  *         4 - not valid sector
   */
 
-uint8_t flashFillMemory(uint32_t* buffer, uint32_t length)
+uint8_t flashFillMemory(uint32_t* buffer, uint32_t length, sector_t sector )
 {
   uint8_t errorCode = 0;
+  uint32_t startAddr, maxLength;
+  uint32_t FirstSector = 0, NbOfSectors = 0, Address = 0;
+  uint32_t SectorError = 0;
+  uint32_t * pointer = NULL;
+  uint32_t data32 = 0 , MemoryProgramStatus = 0;
+  
   if(length == 0)return errorCode;
-  if(length > 0xFFFFUL/4)return 3; //
   pointer = buffer;
+  
+  if(sector == eepromSector)
+  {
+    FirstSector = 2;
+    startAddr = FLASH_EEPROM_START_ADDR;
+    maxLength = 0x4000UL/4;
+  }
+  else if(sector == appSector)
+  {
+    FirstSector = 4;
+    startAddr = FLASH_CODE_START_ADDR;
+    maxLength = 0xFFFFUL/4;
+  }
+  else return 4;
+  if(length > maxLength)return 3; //
+  
   /* Unlock the Flash to enable the flash control register access *************/ 
   HAL_FLASH_Unlock();
-  FirstSector = 4;
   NbOfSectors = 1;
   /* Fill EraseInit structure*/
   EraseInitStruct.TypeErase = FLASH_TYPEERASE_SECTORS;
@@ -128,8 +145,8 @@ uint8_t flashFillMemory(uint32_t* buffer, uint32_t length)
   /* Program the user Flash area word by word
     (area defined by FLASH_CODE_START_ADDR and length of the buffer) ***********/
 
-  Address = FLASH_CODE_START_ADDR;
-  while (Address < (FLASH_CODE_START_ADDR + length*4))
+  Address = startAddr;
+  while (Address < (startAddr + length*4))
   {
     if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, Address, *pointer) == HAL_OK)
     {
@@ -152,12 +169,12 @@ uint8_t flashFillMemory(uint32_t* buffer, uint32_t length)
   /* Check if the programmed data is OK 
       MemoryProgramStatus = 0: data programmed correctly
       MemoryProgramStatus != 0: number of words not programmed correctly ******/
-  Address = FLASH_CODE_START_ADDR;
+  Address = startAddr;
   pointer = buffer;
   MemoryProgramStatus = 0;
-  while (Address < (FLASH_CODE_START_ADDR + length*4))
+  while (Address < (startAddr + length*4))
   {
-    data32 = *(__IO uint32_t*)Address;
+    data32 = *(uint32_t*)Address;
 
     if (data32 != *pointer)
     {
