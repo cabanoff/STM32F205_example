@@ -42,15 +42,15 @@ int eepromGetID(void);
   *          Channel from 1 to 35 
   */
 int eepromGetChannel(void);
-    /**
-  * @brief  get Mode from eeprom
+/**
+  * @brief  returms string with frequency 
   *
-  * @param  None
-  * @retval -1 no Channel found
-  *          Mode from 1 to 3 (1 -  FAST, 2 - NORMAL, 3 - SLOW)
-  *          if channels 31-35 returns 2 - NORMAL
+  * @param  Channel number Channel from 1 to 35 
+  * @retval String with frequency, or with error
+  *          
   */
-int eepromGetMode(void);
+char* eepromFreqString(int channel);
+
  /**
   * @brief  prepare buffer for entering ID mode
   *
@@ -77,4 +77,40 @@ int eepromEnterCh(unsigned char data);
   */
 
 void eepromChModePrep(void);
+
+/**
+  * @brief  mode for entring Mode (1 -  FAST, 2 - NORMAL, 3 - SLOW)
+  *             write Channel into EEPROM
+  * @param  data from terminal, accepts only 1 last charscter if it is a digit
+  * @retval -1 exit from mode with error
+  *          0 stay in mode 
+  *          1 exit from mode with new Channel number
+  */
+int eepromEnterMode(unsigned char data);
+/**
+  * @brief  returms string with mode 
+  *
+  * @param  mode from 1 to 3 (1 -  FAST, 2 - NORMAL, 3 - SLOW)
+  * @retval String with mode 
+  *          
+  */
+
+char* eepromModeString(int mode);
+/**
+  * @brief  prepare for entering Mode mode
+  *
+  * @param  None
+  * @retval None
+  */
+void eepromModeModePrep(void);
+/**
+  * @brief  get Mode from eeprom
+  *
+  * @param  None
+  * @retval -1 no Channel found
+  *          Mode from 1 to 3 (1 -  FAST, 2 - NORMAL, 3 - SLOW)
+  *          if channels 31-35 returns 2 - NORMAL
+  */
+int eepromGetMode(void);
+
 #endif /* __EEPROM_H */

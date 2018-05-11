@@ -34,10 +34,10 @@ typedef union
 #define CH_SIZE  2
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-int counter = 0;
 eeprom_t eeprom;
-uint8_t IDBuffer[ID_SIZE];
-uint8_t chBuffer[CH_SIZE];
+static uint8_t IDBuffer[ID_SIZE];
+static uint8_t chBuffer[CH_SIZE];
+static uint8_t mode;
 /* Private function prototypes -----------------------------------------------*/
 /**
   * @brief  write device ID to eeprom
@@ -55,6 +55,14 @@ int writeID(uint32_t ID);
   *         0 - success
   */
 int writeChannel(uint32_t channel);
+/**
+  * @brief  write mode to eeprom
+  *
+  * @param  None
+  * @retval -1 error during writing
+  *         0 - success
+  */
+int writeMode(uint32_t mode);
 
 /* Public functions ----------------------------------------------------------*/
 
@@ -177,6 +185,57 @@ int eepromGetChannel(void)
 }
 
 /**
+  * @brief  returms string with frequency 
+  *
+  * @param  Channel number Channel from 1 to 35 
+  * @retval String with frequency, or with error
+  *          
+  */
+char freq [][8] ={{"no freq"},   // 0
+                  {"43600Hz"},  // 1
+                  {"43800Hz"},   // 2
+                  {"44000Hz"},  // 3
+                  {"442000Hz"},  // 4
+                  {"44400Hz"},  // 5
+                  {"44600Hz"},  // 6
+                  {"44800Hz"},  // 77
+                  {"45000Hz"},  // 8
+                  {"45200Hz"},  // 9
+                  {"45400Hz"},  // 10
+                  {"45600Hz"},  // 11
+                  {"45800Hz"},  // 12
+                  {"46000Hz"},  // 13 
+                  {"46200Hz"},  // 14
+                  {"46400Hz"},  // 15
+                  {"46600Hz"},  // 16 
+                  {"46800Hz"},  // 17
+                  {"47000Hz"},  // 18
+                  {"47200Hz"},  // 19
+                  {"47400Hz"},  // 20
+                  {"47600Hz"},  // 21
+                  {"47800Hz"},  // 22
+                  {"48000Hz"},  // 23
+                  {"48200Hz"},  // 24
+                  {"48400Hz"},  // 25
+                  {"48600Hz"},  // 26
+                  {"48800Hz"},  // 27
+                  {"49000Hz"},  // 28
+                  {"49200Hz"},  // 29
+                  {"49400Hz"},  // 30
+                  {"43200Hz"},  // 31
+                  {"43100Hz"},  // 32
+                  {"43000Hz"},  // 33
+                  {"43300Hz"},  // 34
+                  {"43400Hz"}}; // 35
+
+char errorChannel [] = {"No frequency"};
+char* eepromFreqString(int channel)
+{
+  if((channel > 0)&&(channel < 36)) return freq[channel];
+  else return errorChannel;
+}
+
+/**
   * @brief  get Mode from eeprom
   *
   * @param  None
@@ -189,8 +248,54 @@ int eepromGetMode(void)
   if(flashReadEEPROM(eeprom.eeprom , sizeof(eeprom)/sizeof(uint32_t)) != 0)return -1;
   if(CHECK(eeprom.param.Mode) != eeprom.param.ModeCheck) return -1;
   if((eeprom.param.Mode > 3)||(eeprom.param.Mode == 0))return -1;
-  if(eeprom.param.Channel > 30)return 2;
   return (int)eeprom.param.Mode;
+}
+/**
+  * @brief  returms string with mode 
+  *
+  * @param  mode from 1 to 3 (1 -  FAST, 2 - NORMAL, 3 - SLOW)
+  * @retval String with mode 
+  *          
+  */
+char stringMode[][8] ={{"no mode"},   // 0
+                        {"FAST"},
+                        {"NORMAL"},
+                        {"SLOW"}};
+char errorMode [] = {"No Mode selected"};
+char* eepromModeString(int inpMode)
+{
+  if((inpMode > 0)&&(inpMode < 4)) return stringMode[inpMode];
+  else return errorMode;
+}
+/**
+  * @brief  prepare for entering Mode mode
+  *
+  * @param  None
+  * @retval None
+  */
+void eepromModeModePrep(void)
+{
+  mode = 0;
+}
+/**
+  * @brief  mode for entring Mode (1 -  FAST, 2 - NORMAL, 3 - SLOW)
+  *             write Channel into EEPROM
+  * @param  data from terminal, accepts only 1 last charscter if it is a digit
+  * @retval -1 exit from mode with error
+  *          0 stay in mode 
+  *          1 exit from mode with new Channel number
+  */
+int eepromEnterMode(unsigned char data)
+{
+  if((data == '\r')||(data == '\n')) //enter new mode
+  {
+    if((mode > 3)||(mode == 0))return -1;
+    if(writeMode(mode) < 0)return -1;
+    return 1;
+  }
+  else if ((data >= '1')&&(data <= '3'))mode = data - '0';
+  else eepromModeModePrep();
+  return 0;
 }
 
 /* Private functions ---------------------------------------------------------*/
@@ -222,6 +327,21 @@ int writeChannel(uint32_t channel)
   if(flashReadEEPROM(eeprom.eeprom , sizeof(eeprom)/sizeof(uint32_t)) != 0)return -1;
   eeprom.param.Channel = channel;
   eeprom.param.ChannelCheck = CHECK(channel);
+  if(flashWriteEEPROM(eeprom.eeprom , sizeof(eeprom)/sizeof(uint32_t)) != 0)return -1;
+  return 0;
+}
+/**
+  * @brief  write mode to eeprom
+  *
+  * @param  None
+  * @retval -1 error during writing
+  *         0 - success
+  */
+int writeMode(uint32_t inpMode)
+{
+  if(flashReadEEPROM(eeprom.eeprom , sizeof(eeprom)/sizeof(uint32_t)) != 0)return -1;
+  eeprom.param.Mode = inpMode;
+  eeprom.param.ModeCheck = CHECK(inpMode);
   if(flashWriteEEPROM(eeprom.eeprom , sizeof(eeprom)/sizeof(uint32_t)) != 0)return -1;
   return 0;
 }

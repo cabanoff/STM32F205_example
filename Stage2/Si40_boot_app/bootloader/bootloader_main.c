@@ -30,8 +30,8 @@
 #define MAX_DOWNLOADED_KBYTES 8
 #define MAX_DOWNLOAD_BYTES   (1024 * MAX_DOWNLOADED_KBYTES)
 #define BOOT_VER        1
-#define BOOT_SUB_VER    6
-#define BOOT_BUILD      37
+#define BOOT_SUB_VER    7
+#define BOOT_BUILD      42
 #define APP_VER        appVer.buffVer[0]
 #define APP_SUB_VER    appVer.buffVer[1]
 #define APP_BUILD      appVer.buffVer[2]
@@ -81,7 +81,7 @@ volatile uint32_t stack_arr[100]    = {0}; // Allocate some stack
                                                // correctly.
 download_t buffer;
 int xmodemResult = 0;
-inputMode_t mode = initialMode;
+static inputMode_t mode = initialMode;
 volatile uint32_t sysTickCounter = 0;
 char *errorFile;
 int errorLine;
@@ -215,17 +215,17 @@ int main(void)
             else printf("\n\r Application doesn't exist.\n\r");
             break;
           case 'i':         
-            printf("\n\r Enter 4 digits of device ID then press return.\n\r");
+            printf("\n\r Enter 4 digits of device ID, then press return.\n\r");
             eepromIDModePrep();
             mode = enterIDMode;
             break;
           case 'c':
-            printf("\n\r Enter frequency channel number(1-35), than press return.\n\r");
+            printf("\n\r Enter frequency channel number(1-35), then press return.\n\r");
             eepromChModePrep();
             mode = enterChMode;
             break;
           case 'm':
-            printf("\n\r Enter mode - F(fast), N(normal), S(slow).\n\r");
+            printf("\n\r Enter mode - 1(FAST), 2(NORMAL), 3(SLOW), then press return.\n\r");
             mode = enterModeMode;
             break;
           case 'p':
@@ -237,7 +237,12 @@ int main(void)
             printf("\n\r i - Enter Device ID");
             printf("\n\r m - Enter mode");
             printf("\n\r c - Enter channel");
-            printf("\n\r p - Print device information\n\r");
+            printf("\n\r p - Print device information");
+            printf("\n\r return - check connection\n\r");
+            break;
+          case '\n':
+          case '\r':
+            printf(" connection at 4800 baud\n\r");
             break;
         }
       }
@@ -267,6 +272,22 @@ int main(void)
         {
           mode = initialMode;
           printf("\n\r New frequency channel is %d \n\r", eepromGetChannel());
+          printf(" Frequency %s.\n\r",eepromFreqString(eepromGetChannel()));
+        }        
+        
+      }
+       else if (mode == enterModeMode)
+      {
+        int val = eepromEnterMode(data);
+        if( val == -1) //
+        {
+          mode = initialMode;
+          printf("\n\r Error. \n\r");
+        }
+        if(val == 1)
+        {
+          mode = initialMode;
+          printf("\n\r New Mode is %s \n\r", eepromModeString(eepromGetMode()));        
         }        
         
       }
@@ -354,6 +375,25 @@ void outbyte(int c)
 
 void printDevInfo(void)
 {
+  
+  int ID = eepromGetID();
+  if(ID < 0) printf("\n\r Device ID doesn't exist.\n\r");
+  else printf("\n\r Device ID %d.\n\r",ID);
+  
+  int Channel = eepromGetChannel();
+  if(Channel < 0) printf(" Channel isn't set.\n\r");
+  else 
+  {
+    printf(" Channel %d.\n\r",Channel);
+    printf(" Frequency %s.\n\r",eepromFreqString(Channel));
+  }
+  if((Channel > 0)&&(Channel < 31))
+  {
+    int Mode = eepromGetMode();
+    if(Mode < 0) printf(" Mode isn't set.\n\r");
+    else printf(" %s mode .\n\r", eepromModeString(Mode));
+  }
+  
   appVer.uiVer = *(uint32_t*)(&app_vector + MAX_DOWNLOAD_BYTES/4 - 1);  //reading 
   printf("\n\r Bootloader version %d.%d build %d.\n\r", BOOT_VER, BOOT_SUB_VER, BOOT_BUILD);
   appVer.uiVer = *(uint32_t*)(&app_vector + MAX_DOWNLOAD_BYTES/4 - 2);
@@ -363,17 +403,6 @@ void printDevInfo(void)
     printf(" Application version %d.%d build %d.\n\r", APP_VER, APP_SUB_VER, APP_BUILD);
   }
   else printf(" Application doesn't exist.\n\r");
-  int ID = eepromGetID();
-  if(ID < 0) printf(" Device ID doesn't exist.\n\r");
-  else printf(" Device ID %d.\n\r",ID);
-  
-  int Channel = eepromGetChannel();
-  if(Channel < 0) printf(" Channel isn't set.\n\r");
-  else printf(" Channel %d.\n\r",Channel);
-  
-  int Mode = eepromGetMode();
-  if(Mode < 0) printf(" Mode isn't set.\n\r");
-  else printf(" Mode %d.\n\r",Mode);
 }
 
 /**
