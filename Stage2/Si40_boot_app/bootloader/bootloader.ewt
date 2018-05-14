@@ -2410,6 +2410,9 @@
         <group>
             <name>User</name>
             <file>
+                <name>$PROJ_DIR$\Src\alarm.c</name>
+            </file>
+            <file>
                 <name>$PROJ_DIR$\bootloader_main.c</name>
             </file>
             <file>

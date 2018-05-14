@@ -29,7 +29,7 @@
 /* Private define ------------------------------------------------------------*/
 #define APP_VER        1
 #define APP_SUB_VER    2
-#define APP_BUILD      36
+#define APP_BUILD      37
 #define APP_CHECK      (APP_VER + APP_SUB_VER + APP_BUILD)
 /* Private macro -------------------------------------------------------------*/
 extern uint32_t __checksum;                                 // import checksum
@@ -90,7 +90,7 @@ int main(void)
   pCrc = &__checksum;      //to avoid optimization by compilator
   version = appVer[0];  // to avoid optimization by compilator
   
-  delay = 2000;// 2 sec delay
+  delay = 500;// delay
 
 
 
@@ -98,7 +98,7 @@ int main(void)
   while (1)
   {
     HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_0);
-    /* Insert delay 1000 ms or 2000*/
+    /* Insert delay */
     HAL_Delay(delay);
   }
 }

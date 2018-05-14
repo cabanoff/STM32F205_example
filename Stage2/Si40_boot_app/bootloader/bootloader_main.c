@@ -26,17 +26,20 @@
 #include "eeprom.h"
 #include "intrinsics.h"
 #include "crc.h"
+#include "alarm.h"
 
 #define MAX_DOWNLOADED_KBYTES 8
 #define MAX_DOWNLOAD_BYTES   (1024 * MAX_DOWNLOADED_KBYTES)
 #define BOOT_VER        1
-#define BOOT_SUB_VER    7
-#define BOOT_BUILD      42
+#define BOOT_SUB_VER    8
+#define BOOT_BUILD      56
 #define APP_VER        appVer.buffVer[0]
 #define APP_SUB_VER    appVer.buffVer[1]
 #define APP_BUILD      appVer.buffVer[2]
 #define APP_CHECK      appVer.buffVer[3]
 #define APP_SUMM      (APP_VER + APP_SUB_VER + APP_BUILD)
+#define SWITCH_APP1      5000
+#define SWITCH_APP2      (180UL*1000)
 
 
 /* Private typedef -----------------------------------------------------------*/
@@ -73,7 +76,7 @@ typedef union
 extern const uint32_t app_vector;   // Application vector address symbol from 
                                     // the linker configuration file
 const vector_t *vector_p            = (vector_t*) &app_vector;
-volatile uint32_t stack_arr[100]    = {0}; // Allocate some stack
+//volatile uint32_t stack_arr[100]    = {0}; // Allocate some stack
                                                // just to show that
                                                // the SP should be reset
                                                // before the jump - or the
@@ -86,6 +89,7 @@ volatile uint32_t sysTickCounter = 0;
 char *errorFile;
 int errorLine;
 version_t appVer;
+char data;
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
@@ -111,19 +115,26 @@ int main(void)
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
 
-  for(uint32_t i = 0; i < MAX_DOWNLOAD_BYTES/4; i++)buffer.forFlash[i] = 0x33;
+  //for(uint32_t i = 0; i < MAX_DOWNLOAD_BYTES/4; i++)buffer.forFlash[i] = 0x33;
 
   /* Configure the system clock */
   SystemClock_Config();
 
   gpioInit();
+  gpioPWROn();
   uartInit(4800);
   xmodenInit(inbyte,outbyte);
+  alarmInit();
+  
   
   /* Initialize interrupts */
   MX_NVIC_Init();
   gpioTxEn();
+  gpioLEDOn();
+  gpioRedLEDOn();
   HAL_Delay(10);   
+  alarmSet(SWITCH_APP1);
+  alarmToggleSet(500);
 
   /* Output a message on Hyperterminal using printf function */
   printf("\n\r Start bootloader software");
@@ -131,16 +142,17 @@ int main(void)
   printf(" Press h for help\n\r"); 
   gpioRxEn();
   HAL_Delay(10);
-  uartStartRX();    
+  uartStartRX(); 
+  //gpioPWROff();
   /* Infinite loop */
 
   while (1)
   {
 
     if(uartIsData())
-    {
-      char data = uartGetData();
-      
+    {      
+      data = uartGetData();
+      if(data)alarmSet(SWITCH_APP2);
       //outbyte(data);
       gpioTxEn();
       HAL_Delay(10);
@@ -208,8 +220,6 @@ int main(void)
             appVer.uiVer = *(uint32_t*)(&app_vector + MAX_DOWNLOAD_BYTES/4 - 2);
             if((xmodemResult == 0)&&(APP_CHECK == APP_SUMM))
             {
-              printf("\n\r Exit from bootloader.\n\r");
-              printf(" Go to application.\n\r");
               goToApp();
             }
             else printf("\n\r Application doesn't exist.\n\r");
@@ -295,7 +305,8 @@ int main(void)
       HAL_Delay(10);
       uartStartRX(); 
     }
-
+    if(alarmIsAlarm())goToApp();
+    if(alarmIsToggle())gpioRedLEDToggle();
   }
 }
 
@@ -369,8 +380,8 @@ int inbyte(unsigned short timeout)
 
 void outbyte(int c)
 {
-  uint8_t data = c;
-  uartStartTXBlock(data);
+  uint8_t outData = c;
+  uartStartTXBlock(outData);
 }
 
 void printDevInfo(void)
@@ -412,9 +423,14 @@ void printDevInfo(void)
   */
 static void goToApp(void)
 {
-  HAL_Delay(1000);
+  printf("\n\r Exit from bootloader.\n\r");
+  printf(" Go to application.\n\r");
+  gpioLEDOff();
+  gpioPWROff();
+  HAL_Delay(1000); 
   uartDeInit();
   gpioDeInit();
+  alarmDeInit();
   HAL_DeInit();
   __disable_interrupt();              // 1. Disable interrupts
   __set_SP(vector_p->stack_addr);     // 2. Configure stack pointer
