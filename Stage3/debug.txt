@@ -1,0 +1,41 @@
+1 Проблема - не считается CRC 
+HAL_CRC_Calculate(&CrcHandle,(uint32_t *)aDataBuffer, BUFFER_SIZE); возвращает 0
+в примере эта же функция возвращает нормальное значение
+
+Решение - stm32f2xx_hal_msp.c
+Добавлены
+void HAL_CRC_MspInit(CRC_HandleTypeDef *hcrc)
+{
+   /* CRC Peripheral clock enable */
+  __HAL_RCC_CRC_CLK_ENABLE();
+}
+
+/**
+  * @brief CRC MSP De-Initialization 
+  *        This function freeze the hardware resources used in this example:
+  *          - Disable the Peripheral's clock
+  * @param hcrc: CRC handle pointer
+  * @retval None
+  */
+void HAL_CRC_MspDeInit(CRC_HandleTypeDef *hcrc)
+{
+  /* Enable CRC reset state */
+  __HAL_RCC_CRC_FORCE_RESET();
+  
+  /* Release CRC from reset state */
+  __HAL_RCC_CRC_RELEASE_RESET();
+}
+
+Вывод:  stm32f2xx_hal_msp.c - из примера требуется изучать внимательно!!
+
+2.
+Запись по определённому адресу - *(__IO uint32_t*)Address = Data;
+Address = 0x8010000 + n*4
+Чтение по определённому адресу 
+
+data32 = *(uint32_t*)(&app_vector + MAX_DOWNLOAD_BYTES/4 - 1)
+3.
+чтоб записать версию по определённому адресу - воспользоваться https://www.iar.com/support/tech-notes/linker/how-do-i-place-a-group-of-functions-or-variables-in-a-specific-section/
+а так же использовать данную переменную в программе
+
+version[0] = appVer[0];
