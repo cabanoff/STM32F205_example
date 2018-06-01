@@ -32,13 +32,13 @@
 #define MAX_DOWNLOAD_BYTES   (1024 * MAX_DOWNLOADED_KBYTES)
 #define BOOT_VER        2
 #define BOOT_SUB_VER    2
-#define BOOT_BUILD      58
+#define BOOT_BUILD      59
 #define APP_VER        appVer.buffVer[0]
 #define APP_SUB_VER    appVer.buffVer[1]
 #define APP_BUILD      appVer.buffVer[2]
 #define APP_CHECK      appVer.buffVer[3]
 #define APP_SUMM      (APP_VER + APP_SUB_VER + APP_BUILD)
-#define SWITCH_APP1      5000
+#define SWITCH_APP1      10000
 #define SWITCH_APP2      (180UL*1000)
 
 

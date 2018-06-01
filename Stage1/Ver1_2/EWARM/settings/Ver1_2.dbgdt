@@ -850,7 +850,7 @@
                     <item>testTX</item>
                     <item>testErr</item>
                     <item>aRxBuffer</item>
-                    <item></item>
+                    <item />
                 </expressions>
                 <col-names>
                     <item>Expression</item>

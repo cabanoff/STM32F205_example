@@ -119,7 +119,7 @@ void StandbyRTCBKPSRAMMode_Measure(void)
   __HAL_RTC_WAKEUPTIMER_CLEAR_FLAG(&RTCHandle, RTC_FLAG_WUTF);
   
   /*## Setting the Wake up time ##############################################*/
-  HAL_RTCEx_SetWakeUpTimer_IT(&RTCHandle, 0x800*10, RTC_WAKEUPCLOCK_RTCCLK_DIV16);
+  HAL_RTCEx_SetWakeUpTimer_IT(&RTCHandle, (0x800*20)-70, RTC_WAKEUPCLOCK_RTCCLK_DIV16);
 
   /* Enable BKPRAM Clock */
   __HAL_RCC_BKPSRAM_CLK_ENABLE();

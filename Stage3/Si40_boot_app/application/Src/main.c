@@ -16,6 +16,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include <intrinsics.h>
+#include "tim1.h"
+#include "gpio.h"
 
 
 /** @addtogroup STM32F2xx_HAL_Examples
@@ -28,17 +30,15 @@
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 #define APP_VER        2
-#define APP_SUB_VER    1
-#define APP_BUILD      42
+#define APP_SUB_VER    2
+#define APP_BUILD      45
 #define APP_CHECK      (APP_VER + APP_SUB_VER + APP_BUILD)
 /* Private macro -------------------------------------------------------------*/
 extern uint32_t __checksum;                                 // import checksum
  
 /* Private variables ---------------------------------------------------------*/
-static GPIO_InitTypeDef  GPIO_InitStruct;
 
 //uint32_t* ptr = begin;
-uint32_t delay = 1000;
 volatile uint32_t *pCrc;
 unsigned char version;
 
@@ -75,40 +75,41 @@ int main(void)
   /* Configure the system clock to 120 MHz */
   //SystemClock_Config();
   
-  /* -1- Enable GPIOA (to be able to program the configuration registers) */
-  __HAL_RCC_GPIOA_CLK_ENABLE();
-  
-  /* -2- Configure PA.0IOs in output push-pull mode to
-         drive external LEDs */
-  GPIO_InitStruct.Pin = (GPIO_PIN_0);
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FAST;
-  
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  gpioInit();  
+  tim1Init();
   
   pCrc = &__checksum;      //to avoid optimization by compilator
   version = appVer[0];  // to avoid optimization by compilator
   
-  delay = 500;// delay
+  //delay = 500;// delay
 
 
 
   /* -3- Toggle PA.0 IOs in an infinite loop */  
   while (1)
   {
-    for(int i = 0; i < 20; i++)  //20 toggles of led
-    {
-      HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_0);
-      /* Insert delay */
-      HAL_Delay(delay);
-    }
+    
     /* STANDBY Mode with RTC on LSE/LSI Entry 
     - RTC Clocked by LSE/LSI
     - Backup SRAM ON
     - IWDG OFF
     - Automatic Wakeup using RTC clocked by LSE/LSI (after ~20s)
     */
+    tim1SetPeriod();
+    gpioPWROn();
+    
+    gpioPA2Off();
+    HAL_Delay(5);
+    gpioPA2On();
+    
+    tim1Start();
+    HAL_Delay(30);
+    tim1Stop();
+    
+    gpioPWROff();
+    
+    tim1DeInit();
+    gpioDeInit();
     StandbyRTCBKPSRAMMode_Measure();
   }
 }

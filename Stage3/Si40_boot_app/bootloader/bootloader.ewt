@@ -2383,6 +2383,9 @@
                 <name>$PROJ_DIR$\Inc\crc.h</name>
             </file>
             <file>
+                <name>$PROJ_DIR$\Inc\eeprom.h</name>
+            </file>
+            <file>
                 <name>$PROJ_DIR$\Inc\enterID.h</name>
             </file>
             <file>

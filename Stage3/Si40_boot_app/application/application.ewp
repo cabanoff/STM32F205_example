@@ -2046,6 +2046,9 @@
         <group>
             <name>Inc</name>
             <file>
+                <name>$PROJ_DIR$\Inc\gpio.h</name>
+            </file>
+            <file>
                 <name>$PROJ_DIR$\Inc\main.h</name>
             </file>
             <file>
@@ -2057,9 +2060,15 @@
             <file>
                 <name>$PROJ_DIR$\Inc\stm32f2xx_lp_modes.h</name>
             </file>
+            <file>
+                <name>$PROJ_DIR$\Inc\tim1.h</name>
+            </file>
         </group>
         <group>
             <name>User</name>
+            <file>
+                <name>$PROJ_DIR$\Src\gpio.c</name>
+            </file>
             <file>
                 <name>$PROJ_DIR$\Src\main.c</name>
             </file>
@@ -2071,6 +2080,9 @@
             </file>
             <file>
                 <name>$PROJ_DIR$\Src\stm32f2xx_lp_modes.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\Src\tim1.c</name>
             </file>
         </group>
     </group>
