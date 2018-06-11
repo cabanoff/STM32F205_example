@@ -40,14 +40,14 @@ void gpioInit(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FAST;
   
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-  /* -2- Configure PA.0IOs in output push-pull mode to
-         drive external LEDs */
-  GPIO_InitStruct.Pin = (GPIO_PIN_0|GPIO_PIN_8);
+  
+  GPIO_InitStruct.Pin = (GPIO_PIN_8|GPIO_PIN_0);
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FAST;
   
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  
   
 }
 /**

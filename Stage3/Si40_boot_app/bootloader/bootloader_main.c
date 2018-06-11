@@ -3,7 +3,7 @@
  *      Flash:           0x08000000 - 0x0801FFFF (128 KB)
  *      Bootloader:      0x08000000 - 0x08007FFF (32 KB)
  *      EEPROM:          0x08008000 - 0x0800FFFF (32 KB)
- *      Application:     0x08010000 - 0x08011FFF (8KB)
+ *      Application:     0x08010000 - 0x08013FFF (16KB)
 
 
   ******************************************************************************
@@ -28,11 +28,11 @@
 #include "crc.h"
 #include "alarm.h"
 
-#define MAX_DOWNLOADED_KBYTES 8
+#define MAX_DOWNLOADED_KBYTES 16
 #define MAX_DOWNLOAD_BYTES   (1024 * MAX_DOWNLOADED_KBYTES)
 #define BOOT_VER        2
-#define BOOT_SUB_VER    2
-#define BOOT_BUILD      59
+#define BOOT_SUB_VER    3
+#define BOOT_BUILD      65
 #define APP_VER        appVer.buffVer[0]
 #define APP_SUB_VER    appVer.buffVer[1]
 #define APP_BUILD      appVer.buffVer[2]
@@ -164,7 +164,7 @@ int main(void)
     if(uartIsData())
     {      
       data = uartGetData();
-      if(data)alarmSet(SWITCH_APP2);
+      if(((data >= '0')&&(data <= 'y'))||(data == 0x0a)||(data == 0x0d)||(data == ' '))alarmSet(SWITCH_APP2);
       //outbyte(data);
       gpioTxEn();
       HAL_Delay(10);
@@ -332,8 +332,8 @@ int main(void)
   *            AHB Prescaler                  = 1
   *            APB1 Prescaler                 = 4
   *            APB2 Prescaler                 = 2
-  *            HSE Frequency(Hz)              = 25000000
-  *            PLL_M                          = 25
+  *            HSE Frequency(Hz)              = 8000000
+  *            PLL_M                          = 8
   *            PLL_N                          = 240
   *            PLL_P                          = 2
   *            PLL_Q                          = 5
