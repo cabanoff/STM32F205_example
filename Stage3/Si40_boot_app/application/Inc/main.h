@@ -42,6 +42,7 @@
 #include "stm32f2xx_lp_modes.h"
 
 /* Exported types ------------------------------------------------------------*/
+
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
 #define RTC_CLOCK_SOURCE_LSE    /* LSE used as RTC source clock */

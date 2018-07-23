@@ -195,7 +195,7 @@ char freq [][8] ={{"no freq"},   // 0
                   {"43600Hz"},  // 1
                   {"43800Hz"},   // 2
                   {"44000Hz"},  // 3
-                  {"442000Hz"},  // 4
+                  {"44200Hz"},  // 4
                   {"44400Hz"},  // 5
                   {"44600Hz"},  // 6
                   {"44800Hz"},  // 77
@@ -257,14 +257,15 @@ int eepromGetMode(void)
   * @retval String with mode 
   *          
   */
-char stringMode[][8] ={{"no mode"},   // 0
-                        {"FAST"},
-                        {"NORMAL"},
-                        {"SLOW"}};
+char stringMode[][17] ={{"no mode"},   // 0
+                        {"PI_FAST"},
+                        {"PI_NORMAL"},
+                        {"PI_SLOW"},
+                        {"Marport_NORMAL"}};
 char errorMode [] = {"No Mode selected"};
 char* eepromModeString(int inpMode)
 {
-  if((inpMode > 0)&&(inpMode < 4)) return stringMode[inpMode];
+  if((inpMode > 0)&&(inpMode < 5)) return stringMode[inpMode];
   else return errorMode;
 }
 /**

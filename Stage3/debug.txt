@@ -39,3 +39,5 @@ data32 = *(uint32_t*)(&app_vector + MAX_DOWNLOAD_BYTES/4 - 1)
 а так же использовать данную переменную в программе
 
 version[0] = appVer[0];
+4. Чтоб загрузить обе программы в память выставить для application - Option - Output Converter - Generate additional output - Raw binary
+5. Чтоб создать текстовый файл для прошивки через бутлоадер application - Option - Output Converter - Generate additional output - Texas Instruments TI-TXT

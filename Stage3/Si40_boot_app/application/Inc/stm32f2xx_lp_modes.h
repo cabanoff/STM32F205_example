@@ -41,6 +41,7 @@
 #include "main.h"
 
 /* Exported types ------------------------------------------------------------*/
+
 /* Exported constants --------------------------------------------------------*/
 
  #define STANDBY_RTC_BKPSRAM_MODE
@@ -56,7 +57,7 @@
 //void StopMode_Measure(void);
 //void StandbyMode_Measure(void);
 //void StandbyRTCMode_Measure(void);
-void StandbyRTCBKPSRAMMode_Measure(void);
+void StandbyRTCBKPSRAMMode_Measure(int wakeUpTime);
 
 #endif /* __STM32F2xx_LP_MODES_H */
 

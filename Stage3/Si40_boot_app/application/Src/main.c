@@ -28,11 +28,21 @@
   * @{
   */ 
 /* Private typedef -----------------------------------------------------------*/
+
 /* Private define ------------------------------------------------------------*/
 #define APP_VER        2
-#define APP_SUB_VER    3
-#define APP_BUILD      51
+#define APP_SUB_VER    4
+#define APP_BUILD      55
 #define APP_CHECK      (APP_VER + APP_SUB_VER + APP_BUILD)
+#define SEC5    ((0x800*5)-70)
+#define SEC5_5  ((0x800*5)+330)
+#define SEC20   ((0x800*20)-70)
+#define SEC30   ((0x800*30)-70)
+#define SEC32   ((0x800*32)-70)
+#define SEC34   ((0x800UL*34)-70)
+#define SEC123  ((0x800*123)-70)
+#define SEC126  ((0x800*126)-70)
+
 /* Private macro -------------------------------------------------------------*/
 extern uint32_t __checksum;                                 // import checksum
  
@@ -41,6 +51,11 @@ extern uint32_t __checksum;                                 // import checksum
 //uint32_t* ptr = begin;
 volatile uint32_t *pCrc;
 unsigned char version;
+uint32_t wakeUpTime[2][4] = {{SEC5_5,SEC34,SEC126,SEC30},
+                            {SEC5  ,SEC32,SEC123,SEC20}};
+
+//__no_init static int wakeUpCounter;
+//__no_init static int wakeUpCounter2;
 
 #pragma default_variable_attributes = @ ".version"
 const unsigned char appVer [] = {APP_VER,APP_SUB_VER,APP_BUILD,APP_CHECK};
@@ -96,23 +111,28 @@ int main(void)
     - Automatic Wakeup using RTC clocked by LSE/LSI (after ~20s)
     */
     gpioPWROn();    
-    gpioPA2Off();
+    //gpioPA2Off();
     tim1SetPeriod();    
     HAL_Delay(5);
     //gpioPA2On();
     
     tim1Start();
-    HAL_Delay(30);
+    HAL_Delay(29);
     tim1Stop();
     
-    gpioPA2On();                //LED off
+    //gpioPA2On();                //LED off
     gpioPWROff();
     
  //   HAL_Delay(20000);
     
     tim1DeInit();
     gpioDeInit();
-    StandbyRTCBKPSRAMMode_Measure();
+    int mode = eepromGetMode();
+    if((mode > 0)&&(mode < 5)) mode = mode - 1;
+    else mode = 3; // default period
+    
+    //StandbyRTCBKPSRAMMode_Measure(wakeUpTime[0][mode]);
+    StandbyRTCBKPSRAMMode_Measure(SEC34);
   }
 }
 

@@ -112,6 +112,27 @@ int eepromGetChannel(void)
 /* Public functions ---------------------------------------------------------*/
 
 /**
+  * @brief  get Mode from eeprom
+  *
+  * @param  None
+  * @retval -1 no Mode found
+  *          Mode from 1 to 3 (1 -  FAST, 2 - NORMAL, 3 - SLOW)
+  *          if channels 31-35 returns 4 - Marport_NORMAL
+  */
+int eepromGetMode(void)
+{
+  int channel;
+  
+  
+  if(flashReadEEPROM(eeprom.eeprom , sizeof(eeprom)/sizeof(uint32_t)) != 0)return -1;
+  if(CHECK(eeprom.param.Mode) != eeprom.param.ModeCheck) return -1;
+  if((eeprom.param.Mode > 3)||(eeprom.param.Mode == 0))return -1;
+  channel = eepromGetChannel();
+  if((channel > 30)&&(channel < 36))return 4;
+  return (int)eeprom.param.Mode;
+}
+
+/**
   * @brief   
   ##-1- Configure the TIM peripheral #######################################
    ---------------------------------------------------------------------------

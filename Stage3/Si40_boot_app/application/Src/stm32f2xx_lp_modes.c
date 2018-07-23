@@ -54,6 +54,7 @@
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
+
 /* RTC handler declaration */
 RTC_HandleTypeDef RTCHandle;
 
@@ -73,7 +74,7 @@ RTC_HandleTypeDef RTCHandle;
   * @param  None
   * @retval None
   */
-void StandbyRTCBKPSRAMMode_Measure(void)
+void StandbyRTCBKPSRAMMode_Measure(int wakeUpTime)
 {
   /* Configure RTC prescaler and RTC data registers as follow:
   - Hour Format = Format 24
@@ -119,7 +120,7 @@ void StandbyRTCBKPSRAMMode_Measure(void)
   __HAL_RTC_WAKEUPTIMER_CLEAR_FLAG(&RTCHandle, RTC_FLAG_WUTF);
   
   /*## Setting the Wake up time ##############################################*/
-  HAL_RTCEx_SetWakeUpTimer_IT(&RTCHandle, (0x800*20)-70, RTC_WAKEUPCLOCK_RTCCLK_DIV16);
+  HAL_RTCEx_SetWakeUpTimer_IT(&RTCHandle,(uint32_t)wakeUpTime /*(0x800UL*34)-70*/, RTC_WAKEUPCLOCK_RTCCLK_DIV16);
 
   /* Enable BKPRAM Clock */
   __HAL_RCC_BKPSRAM_CLK_ENABLE();

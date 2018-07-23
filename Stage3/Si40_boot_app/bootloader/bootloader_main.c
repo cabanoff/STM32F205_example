@@ -31,8 +31,8 @@
 #define MAX_DOWNLOADED_KBYTES 16
 #define MAX_DOWNLOAD_BYTES   (1024 * MAX_DOWNLOADED_KBYTES)
 #define BOOT_VER        2
-#define BOOT_SUB_VER    3
-#define BOOT_BUILD      65
+#define BOOT_SUB_VER    5
+#define BOOT_BUILD      71
 #define APP_VER        appVer.buffVer[0]
 #define APP_SUB_VER    appVer.buffVer[1]
 #define APP_BUILD      appVer.buffVer[2]
@@ -131,7 +131,8 @@ int main(void)
     goToAppQuick();
     
   }
-
+  HAL_Delay(500); //wait power to stabilaze
+  
   gpioInit();
   gpioPWROn();
   uartInit(4800);
@@ -309,7 +310,8 @@ int main(void)
         if(val == 1)
         {
           mode = initialMode;
-          printf("\n\r New Mode is %s \n\r", eepromModeString(eepromGetMode()));        
+          printf("\n\r New Mode is %s ,\n\r", eepromModeString(eepromGetMode())); 
+          printf(" but if the frequency channel is 31 - 35, mode is %s. \n\r",eepromModeString(4));
         }        
         
       }
@@ -416,7 +418,10 @@ void printDevInfo(void)
     if(Mode < 0) printf(" Mode isn't set.\n\r");
     else printf(" %s mode .\n\r", eepromModeString(Mode));
   }
-  
+  if((Channel > 30)&&(Channel < 36))
+  {
+    printf(" %s mode .\n\r", eepromModeString(4));
+  }
   appVer.uiVer = *(uint32_t*)(&app_vector + MAX_DOWNLOAD_BYTES/4 - 1);  //reading 
   printf("\n\r Bootloader version %d.%d build %d.\n\r", BOOT_VER, BOOT_SUB_VER, BOOT_BUILD);
   appVer.uiVer = *(uint32_t*)(&app_vector + MAX_DOWNLOAD_BYTES/4 - 2);
