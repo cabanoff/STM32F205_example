@@ -36,4 +36,6 @@ void gpioPWROff(void);
 void gpioPA2On(void);
 void gpioPA2Off(void);
 
+uint32_t gpioGetPA0(void);
+
 #endif /* __GPIO_H */

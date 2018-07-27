@@ -58,23 +58,14 @@
 /* RTC handler declaration */
 RTC_HandleTypeDef RTCHandle;
 
-/* Private function prototypes -----------------------------------------------*/
-/* Private functions ---------------------------------------------------------*/
-
 /**
-  * @brief  This function configures the system to enter Standby mode with RTC 
-  *         clocked by LSE or LSI and with Backup SRAM ON for current consumption 
-  *         measurement purpose.
-  *         STANDBY Mode with RTC clocked by LSE/LSI and BKPSRAM
-  *         ====================================================
-  *           - RTC Clocked by LSE or LSI
-  *           - Backup SRAM ON
-  *           - IWDG OFF
-  *           - Automatic Wakeup using RTC clocked by LSE/LSI (after ~20s)
-  * @param  None
+  * @brief  RTCHandler setup
+  * 
+  * @param  Data Data to be written in the sRTC_BKP_DR0.
   * @retval None
   */
-void StandbyRTCBKPSRAMMode_Measure(int wakeUpTime)
+
+void RTCInit(void)
 {
   /* Configure RTC prescaler and RTC data registers as follow:
   - Hour Format = Format 24
@@ -97,6 +88,27 @@ void StandbyRTCBKPSRAMMode_Measure(int wakeUpTime)
     Error_Handler(); 
   }
 
+}
+
+/* Private function prototypes -----------------------------------------------*/
+/* Private functions ---------------------------------------------------------*/
+
+/**
+  * @brief  This function configures the system to enter Standby mode with RTC 
+  *         clocked by LSE or LSI and with Backup SRAM ON for current consumption 
+  *         measurement purpose.
+  *         STANDBY Mode with RTC clocked by LSE/LSI and BKPSRAM
+  *         ====================================================
+  *           - RTC Clocked by LSE or LSI
+  *           - Backup SRAM ON
+  *           - IWDG OFF
+  *           - Automatic Wakeup using RTC clocked by LSE/LSI (after ~20s)
+  * @param  None
+  * @retval None
+  */
+void StandbyRTCBKPSRAMMode_Measure(int wakeUpTime)
+{
+  
   /*## Configure the Wake up timer ###########################################*/
   /*  RTC Wakeup Interrupt Generation:
       Wakeup Time Base = (RTC_WAKEUPCLOCK_RTCCLK_DIV /(LSE or LSI))
@@ -133,7 +145,66 @@ void StandbyRTCBKPSRAMMode_Measure(int wakeUpTime)
   HAL_PWR_EnterSTANDBYMode();
 }
 
+/**
+  * @brief  Writes a data in RTC_BKP_DR0.
+  * 
+  * @param  Data Data to be written in the sRTC_BKP_DR0.
+  * @retval None
+  */
+void BKUP0Write(unsigned int Data)
+{
+  HAL_RTCEx_BKUPWrite(&RTCHandle, RTC_BKP_DR0, Data);
+}
 
+/**
+  * @brief  Reads data from the RTC_BKP_DR0.
+  * 
+  * @retval Read value
+  */
+unsigned int BKUP0Read(void)
+{
+  return HAL_RTCEx_BKUPRead(&RTCHandle, RTC_BKP_DR0);
+}
+/**
+  * @brief  Writes a data in RTC_BKP_DR1.
+  * 
+  * @param  Data Data to be written in the sRTC_BKP_DR1.
+  * @retval None
+  */
+void BKUP1Write(unsigned int Data)
+{
+  HAL_RTCEx_BKUPWrite(&RTCHandle, RTC_BKP_DR1, Data);
+}
+
+/**
+  * @brief  Reads data from the RTC_BKP_DR1.
+  * 
+  * @retval Read value
+  */
+unsigned int BKUP1Read(void)
+{
+  return HAL_RTCEx_BKUPRead(&RTCHandle, RTC_BKP_DR1);
+}
+/**
+  * @brief  Writes a data in RTC_BKP_DR2.
+  * 
+  * @param  Data Data to be written in the sRTC_BKP_DR0.
+  * @retval None
+  */
+void BKUP2Write(unsigned int Data)
+{
+  HAL_RTCEx_BKUPWrite(&RTCHandle, RTC_BKP_DR2, Data);
+}
+
+/**
+  * @brief  Reads data from the RTC_BKP_DR2.
+  * 
+  * @retval Read value
+  */
+unsigned int BKUP2Read(void)
+{
+  return HAL_RTCEx_BKUPRead(&RTCHandle, RTC_BKP_DR2);
+}
 /**
   * @}
   */ 

@@ -31,17 +31,20 @@
 
 /* Private define ------------------------------------------------------------*/
 #define APP_VER        2
-#define APP_SUB_VER    4
-#define APP_BUILD      55
+#define APP_SUB_VER    6
+#define APP_BUILD      63
 #define APP_CHECK      (APP_VER + APP_SUB_VER + APP_BUILD)
+#define SEC3    ((0x800*3)-70)
+#define SEC4    ((0x800*4)-70)
 #define SEC5    ((0x800*5)-70)
 #define SEC5_5  ((0x800*5)+330)
+#define SEC6    ((0x800*6)-70)
 #define SEC20   ((0x800*20)-70)
 #define SEC30   ((0x800*30)-70)
 #define SEC32   ((0x800*32)-70)
 #define SEC34   ((0x800UL*34)-70)
-#define SEC123  ((0x800*123)-70)
-#define SEC126  ((0x800*126)-70)
+#define SEC123  (0x800*30)
+#define SEC126  (0x800*30)
 
 /* Private macro -------------------------------------------------------------*/
 extern uint32_t __checksum;                                 // import checksum
@@ -52,7 +55,15 @@ extern uint32_t __checksum;                                 // import checksum
 volatile uint32_t *pCrc;
 unsigned char version;
 uint32_t wakeUpTime[2][4] = {{SEC5_5,SEC34,SEC126,SEC30},
-                            {SEC5  ,SEC32,SEC123,SEC20}};
+                             {SEC5  ,SEC32,SEC123,SEC20}};
+
+uint32_t repetition[2][4] = {{1,2,5,1},
+                             {1,1,5,1}};
+
+uint32_t reminder[2][4] = {{0,SEC4,SEC6,0},
+                           {0,0,SEC3,0}};
+
+uint32_t testRTC, testWakeUpTime, testRepetition, testReminder;
 
 //__no_init static int wakeUpCounter;
 //__no_init static int wakeUpCounter2;
@@ -90,6 +101,20 @@ int main(void)
   /* Configure the system clock to 120 MHz */
   SystemClock_Config();
   
+  RTCInit();
+  
+  testRTC = BKUP0Read();
+  testWakeUpTime = BKUP0Read();
+  testRepetition = BKUP1Read();
+  testReminder = BKUP2Read();;
+  
+  if(testRepetition > 0)
+  {  
+    BKUP1Write(testRepetition--);
+    if(testRepetition > 0)StandbyRTCBKPSRAMMode_Measure(testWakeUpTime);
+    else StandbyRTCBKPSRAMMode_Measure(testReminder);
+  }
+  
   gpioInit();  
   tim1Init();
   
@@ -97,7 +122,7 @@ int main(void)
   version = appVer[0];  // to avoid optimization by compilator
   
   //delay = 500;// delay
-
+  
 
 
   /* -3- Toggle PA.0 IOs in an infinite loop */  
@@ -115,7 +140,8 @@ int main(void)
     tim1SetPeriod();    
     HAL_Delay(5);
     //gpioPA2On();
-    
+    int sensState = 0;
+    if(gpioGetPA0())sensState = 1;
     tim1Start();
     HAL_Delay(29);
     tim1Stop();
@@ -131,8 +157,11 @@ int main(void)
     if((mode > 0)&&(mode < 5)) mode = mode - 1;
     else mode = 3; // default period
     
-    //StandbyRTCBKPSRAMMode_Measure(wakeUpTime[0][mode]);
-    StandbyRTCBKPSRAMMode_Measure(SEC34);
+    BKUP0Write(wakeUpTime[sensState][mode]);
+    BKUP1Write(repetition[sensState][mode]-1);
+    BKUP2Write(reminder[sensState][mode]);
+    
+    StandbyRTCBKPSRAMMode_Measure(BKUP0Read());
   }
 }
 

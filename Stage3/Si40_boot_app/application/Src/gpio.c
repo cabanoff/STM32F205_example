@@ -95,7 +95,10 @@ void gpioPA2Off(void)
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, GPIO_PIN_RESET);
 }
 
-
+uint32_t gpioGetPA0(void)
+{
+  return 0;
+}
 /* Private functions ---------------------------------------------------------*/
 
 /**

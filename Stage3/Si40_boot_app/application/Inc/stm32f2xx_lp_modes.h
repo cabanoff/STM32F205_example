@@ -38,7 +38,8 @@
 #define __STM32F2xx_LP_MODES_H
 
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
+//#include "main.h"
+#include "stm32f2xx_hal.h"
 
 /* Exported types ------------------------------------------------------------*/
 
@@ -58,6 +59,55 @@
 //void StandbyMode_Measure(void);
 //void StandbyRTCMode_Measure(void);
 void StandbyRTCBKPSRAMMode_Measure(int wakeUpTime);
+/**
+  * @brief  Writes a data in RTC_BKP_DR0.
+  * 
+  * @param  Data Data to be written in the sRTC_BKP_DR0.
+  * @retval None
+  */
+void BKUP0Write(unsigned int Data);
+    
+/**
+  * @brief  Reads data from the RTC_BKP_DR0.
+  * 
+  * @retval Read value
+  */
+unsigned int BKUP0Read(void);
+/**
+  * @brief  Writes a data in RTC_BKP_DR1.
+  * 
+  * @param  Data Data to be written in the sRTC_BKP_DR1.
+  * @retval None
+  */
+void BKUP1Write(unsigned int Data);
+/**
+  * @brief  Writes a data in RTC_BKP_DR2.
+  * 
+  * @param  Data Data to be written in the sRTC_BKP_DR2.
+  * @retval None
+  */
+void BKUP2Write(unsigned int Data);
+    
+/**
+  * @brief  Reads data from the RTC_BKP_DR2.
+  * 
+  * @retval Read value
+  */
+unsigned int BKUP2Read(void);    
+/**
+  * @brief  Reads data from the RTC_BKP_DR1.
+  * 
+  * @retval Read value
+  */
+unsigned int BKUP1Read(void);
+/**
+  * @brief  RTCHandler setup
+  * 
+  * @param  Data Data to be written in the sRTC_BKP_DR0.
+  * @retval None
+  */
+
+void RTCInit(void);
 
 #endif /* __STM32F2xx_LP_MODES_H */
 
