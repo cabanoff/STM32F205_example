@@ -31,8 +31,8 @@
 
 /* Private define ------------------------------------------------------------*/
 #define APP_VER        2
-#define APP_SUB_VER    6
-#define APP_BUILD      63
+#define APP_SUB_VER    7
+#define APP_BUILD      77
 #define APP_CHECK      (APP_VER + APP_SUB_VER + APP_BUILD)
 #define SEC3    ((0x800*3)-70)
 #define SEC4    ((0x800*4)-70)
@@ -40,11 +40,11 @@
 #define SEC5_5  ((0x800*5)+330)
 #define SEC6    ((0x800*6)-70)
 #define SEC20   ((0x800*20)-70)
-#define SEC30   ((0x800*30)-70)
-#define SEC32   ((0x800*32)-70)
-#define SEC34   ((0x800UL*34)-70)
-#define SEC123  (0x800*30)
-#define SEC126  (0x800*30)
+#define SEC30   ((0x800UL*30)-70)
+#define SEC32   ((0x800UL*32)-70)
+#define SEC34   (0x800UL*30)
+#define SEC123  (0x800UL*30)
+#define SEC126  (0x800UL*30)
 
 /* Private macro -------------------------------------------------------------*/
 extern uint32_t __checksum;                                 // import checksum
@@ -110,7 +110,8 @@ int main(void)
   
   if(testRepetition > 0)
   {  
-    BKUP1Write(testRepetition--);
+    testRepetition--;
+    BKUP1Write(testRepetition);
     if(testRepetition > 0)StandbyRTCBKPSRAMMode_Measure(testWakeUpTime);
     else StandbyRTCBKPSRAMMode_Measure(testReminder);
   }
@@ -136,12 +137,12 @@ int main(void)
     - Automatic Wakeup using RTC clocked by LSE/LSI (after ~20s)
     */
     gpioPWROn();    
-    //gpioPA2Off();
+    gpioPA2Off();
     tim1SetPeriod();    
-    HAL_Delay(5);
-    //gpioPA2On();
-    int sensState = 0;
-    if(gpioGetPA0())sensState = 1;
+    HAL_Delay(5);   
+    int sensState = 1;
+    if(gpioGetPA0())sensState = 0;
+    gpioPA2On();
     tim1Start();
     HAL_Delay(29);
     tim1Stop();
@@ -151,8 +152,7 @@ int main(void)
     
  //   HAL_Delay(20000);
     
-    tim1DeInit();
-    gpioDeInit();
+    
     int mode = eepromGetMode();
     if((mode > 0)&&(mode < 5)) mode = mode - 1;
     else mode = 3; // default period
@@ -161,7 +161,13 @@ int main(void)
     BKUP1Write(repetition[sensState][mode]-1);
     BKUP2Write(reminder[sensState][mode]);
     
-    StandbyRTCBKPSRAMMode_Measure(BKUP0Read());
+    testWakeUpTime = BKUP0Read();
+    //testRepetition = BKUP1Read();
+    //testReminder = BKUP2Read();;
+    
+    tim1DeInit();
+    gpioDeInit();
+    StandbyRTCBKPSRAMMode_Measure(testWakeUpTime);
   }
 }
 

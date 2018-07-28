@@ -40,10 +40,19 @@ void gpioInit(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FAST;
   
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-  /* -2- Configure PA.0IOs in output push-pull mode to
+  /* -2- Configure PA.2IOs in output push-pull mode to
          drive external LEDs */
   GPIO_InitStruct.Pin = (GPIO_PIN_2);
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FAST;
+  
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  
+  /* -2- Configure PA.0IOs in input push-pull mode to
+         check sensor */
+  GPIO_InitStruct.Pin = (GPIO_PIN_0);
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FAST;
   
@@ -97,7 +106,8 @@ void gpioPA2Off(void)
 
 uint32_t gpioGetPA0(void)
 {
-  return 0;
+  if(HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_0) == GPIO_PIN_RESET)return 0;
+  return 1; 
 }
 /* Private functions ---------------------------------------------------------*/
 
