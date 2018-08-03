@@ -882,7 +882,7 @@
                     <item>testWakeUpTime</item>
                     <item>testRepetition</item>
                     <item>testReminder</item>
-                    <item></item>
+                    <item />
                 </expressions>
                 <col-names>
                     <item>Expression</item>

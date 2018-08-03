@@ -31,8 +31,8 @@
 
 /* Private define ------------------------------------------------------------*/
 #define APP_VER        2
-#define APP_SUB_VER    7
-#define APP_BUILD      77
+#define APP_SUB_VER    8
+#define APP_BUILD      82
 #define APP_CHECK      (APP_VER + APP_SUB_VER + APP_BUILD)
 #define SEC3    ((0x800*3)-70)
 #define SEC4    ((0x800*4)-70)
@@ -140,11 +140,18 @@ int main(void)
     gpioPA2Off();
     tim1SetPeriod();    
     HAL_Delay(5);   
-    int sensState = 1;
-    if(gpioGetPA0())sensState = 0;
+    int sensState = 0;              //empty
+    if(gpioGetPA0())sensState = 1;  //full
     gpioPA2On();
+    
+    int mode = eepromGetMode();
+    if((mode > 0)&&(mode < 5)) mode = mode - 1;
+    else mode = 3; // default period
+    int delay = 29;
+    if(mode == 3)delay = 47; // if marport then duration = 48mS
+    
     tim1Start();
-    HAL_Delay(29);
+    HAL_Delay(delay);
     tim1Stop();
     
     //gpioPA2On();                //LED off
@@ -152,10 +159,6 @@ int main(void)
     
  //   HAL_Delay(20000);
     
-    
-    int mode = eepromGetMode();
-    if((mode > 0)&&(mode < 5)) mode = mode - 1;
-    else mode = 3; // default period
     
     BKUP0Write(wakeUpTime[sensState][mode]);
     BKUP1Write(repetition[sensState][mode]-1);

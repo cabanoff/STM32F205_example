@@ -444,7 +444,7 @@ static void goToApp(void)
   printf(" Go to application.\n\r");
   gpioLEDOff();
   gpioPWROff();
-  HAL_Delay(1000); 
+  HAL_Delay(1000); // delay for reguletion 
   uartDeInit();
   gpioDeInit();
   alarmDeInit();
