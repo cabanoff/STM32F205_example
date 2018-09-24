@@ -107,10 +107,23 @@ int check(int crc, const unsigned char *buf, int sz)
 	return 0;
 }
 
+char debugInData[0x100];
+char debugPointer = 0;
+char debugInFlushData[0x100];
+char debugFlushPointer = 0;
+
 static int flushinput(int value)
 {
-	while (_inbyte(((DLY_1S)*3)>>1) >= 0);
-        return value;		
+        int debugFlush;
+	//while (_inbyte(((DLY_1S)*3)>>1) >= 0)
+        while(1)
+        {
+          debugFlush = _inbyte(((DLY_1S)*3)>>1);
+          if(debugFlush < 0)return value;
+          debugInFlushData[debugFlushPointer] = (char)debugFlush;
+          debugFlushPointer++;
+        }
+        //return value;		
 }
 
 static int convStr2Byte(unsigned char *str2Byte)
@@ -125,6 +138,8 @@ static int convStr2Byte(unsigned char *str2Byte)
   else return -1;
   return result;
 }
+
+
 
 int xmodemReceive(unsigned char *dest, int destsz)
 {
@@ -159,6 +174,9 @@ int xmodemReceive(unsigned char *dest, int destsz)
       inData = _inbyte(DLY_1S*2);
       if(inData < 0)return flushinput(-3);      
       str2Byte[i] = inData;
+      debugInData[debugPointer]=inData;
+      debugPointer++;
+      
     }
     inData = convStr2Byte(str2Byte);
     if(inData >= 0)dest[pointer++] = inData;

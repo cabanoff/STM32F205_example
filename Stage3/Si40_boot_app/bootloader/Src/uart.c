@@ -157,7 +157,7 @@ int uartStartRXBlock(uint32_t Timeout)
 {
   while (HAL_UART_GetState(&UartHandle) != HAL_UART_STATE_READY);
   
-  if(HAL_UART_Receive(&UartHandle, (uint8_t *)aRxBuffer, 1, Timeout)!= HAL_OK)
+  if(HAL_UART_Receive(&UartHandle, (uint8_t *)aRxBuffer, RXBUFFERSIZE, Timeout)!= HAL_OK)
   {
     return -1;
   }

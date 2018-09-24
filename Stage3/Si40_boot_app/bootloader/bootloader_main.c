@@ -38,8 +38,8 @@
 #define APP_BUILD      appVer.buffVer[2]
 #define APP_CHECK      appVer.buffVer[3]
 #define APP_SUMM      (APP_VER + APP_SUB_VER + APP_BUILD)
-#define SWITCH_APP1      10000
-#define SWITCH_APP2      (180UL*1000)
+#define SWITCH_APP1      1000                                 //delay after switching on
+#define SWITCH_APP2      (180UL*1000)                           //delay after pressing key
 
 
 /* Private typedef -----------------------------------------------------------*/
@@ -90,6 +90,8 @@ char *errorFile;
 int errorLine;
 version_t appVer;
 char data;
+char debugData[256];
+uint8_t debugDataptr = 0;
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
@@ -152,7 +154,7 @@ int main(void)
   /* Output a message on Hyperterminal using printf function */
   printf("\n\r Start bootloader software");
   printDevInfo();
-  printf(" Press h for help\n\r"); 
+  //printf(" Press h for help\n\r"); 
   gpioRxEn();
   HAL_Delay(10);
   uartStartRX(); 
@@ -165,20 +167,33 @@ int main(void)
     if(uartIsData())
     {      
       data = uartGetData();
-      if(((data >= '0')&&(data <= 'y'))||(data == 0x0a)||(data == 0x0d)||(data == ' '))alarmSet(SWITCH_APP2);
-      //outbyte(data);
+      //if(((data >= '0')&&(data <= 'y'))||(data == 0x0a)||(data == 0x0d)||(data == ' '))alarmSet(SWITCH_APP2);
+      debugData[debugDataptr] = data;
+      debugDataptr++;
       gpioTxEn();
-      HAL_Delay(10);
+      HAL_Delay(1);
+      if((data == 0x20)||(data == 0x0a)||(data == 0x0d))
+      {
+        alarmSet(SWITCH_APP2);
+        if(data == 0x20) outbyte(0x08);  //acknowledgement
+         HAL_Delay(100);
+ //       HAL_Delay(300);              
+ //       outbyte(0x20);  //acknowledgement
+ //       HAL_Delay(100);
+ //       outbyte('z');  //debug
+      }
+     
       if(mode == initialMode)
       {
         switch(data)
         {
           case 'd':         //download file using xmodem
-            printf("\n\r File>Send File...\n\r");
+            //printf("\n\r File>Send File...\n\r");
             gpioRxEn();
             HAL_Delay(10);
             xmodemResult = xmodemReceive(buffer.forXModem, MAX_DOWNLOAD_BYTES);
             gpioTxEn();
+            alarmSet(SWITCH_APP2);  // prolong time
             HAL_Delay(10);
             if(xmodemResult < 0) // if something wrong has happend during downloading
             {
@@ -201,7 +216,8 @@ int main(void)
               appVer.uiVer = buffer.forFlash[(MAX_DOWNLOAD_BYTES/4)-2];  //read application version
               if((xmodemResult == 0)&&(APP_CHECK == APP_SUMM))
               {
-                printf(" Application version %d.%d build %d, press 'y' to write in Flash memory.\n\r", APP_VER, APP_SUB_VER, APP_BUILD);
+                //printf(" Application version %d.%d build %d, press 'y' to write in Flash memory.\n\r", APP_VER, APP_SUB_VER, APP_BUILD);
+                printf(" Application version %d.%d build %d.\n\r", APP_VER, APP_SUB_VER, APP_BUILD);
               }
               else printf("CRC or Version number of downladed file is not correct.\n\r");            
             }
@@ -225,7 +241,7 @@ int main(void)
                   break;
                 }
             }
-            else printf("Buffer doesn't contain valid application code.\n\r"); // data in buffer is not application code
+            else printf("\n\r File doesn't contain valid application code.\n\r"); // data in buffer is not application code
             
           break;
           case 'j':         //jump from bootloader to application
@@ -238,17 +254,17 @@ int main(void)
             else printf("\n\r Application doesn't exist.\n\r");
             break;
           case 'i':         
-            printf("\n\r Enter 4 digits of device ID, then press return.\n\r");
+            //printf("\n\r Enter 4 digits of device ID, then press return.\n\r");
             eepromIDModePrep();
             mode = enterIDMode;
             break;
           case 'c':
-            printf("\n\r Enter frequency channel number(1-35), then press return.\n\r");
+            //printf("\n\r Enter frequency channel number(1-35), then press return.\n\r");
             eepromChModePrep();
             mode = enterChMode;
             break;
           case 'm':
-            printf("\n\r Enter mode - 1(FAST), 2(NORMAL), 3(SLOW), then press return.\n\r");
+            //printf("\n\r Enter mode - 1(FAST), 2(NORMAL), 3(SLOW), then press return.\n\r");
             mode = enterModeMode;
             break;
           case 'p':
@@ -294,8 +310,8 @@ int main(void)
         if(val == 1)
         {
           mode = initialMode;
-          printf("\n\r New frequency channel is %d \n\r", eepromGetChannel());
-          printf(" Frequency %s.\n\r",eepromFreqString(eepromGetChannel()));
+          //printf("\n\r New frequency channel is %d \n\r", eepromGetChannel());
+          printf("\n\r New frequency %s.\n\r",eepromFreqString(eepromGetChannel()));
         }        
         
       }
@@ -311,7 +327,7 @@ int main(void)
         {
           mode = initialMode;
           printf("\n\r New Mode is %s ,\n\r", eepromModeString(eepromGetMode())); 
-          printf(" but if the frequency channel is 31 - 35, mode is %s. \n\r",eepromModeString(4));
+          //printf(" but if the frequency channel is 31 - 35, mode is %s. \n\r",eepromModeString(4));
         }        
         
       }
