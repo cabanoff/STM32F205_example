@@ -234,6 +234,49 @@ char* eepromFreqString(int channel)
   if((channel > 0)&&(channel < 36)) return freq[channel];
   else return errorChannel;
 }
+/**
+  * @brief  returns string with device ID
+  *
+  * @param  device ID
+  * @retval 4 digits string containing device ID like 0001, 0110 etc
+  */
+
+char* eepromIDString(int id)
+{
+  static char idString[] = "0000";
+  static char errorString[] = "no ID";
+  if((id < 0)||(id > 9999))return errorString;
+  idString[0]  = id/1000 + '0';
+  idString[1] = (id%1000)/100 + '0';
+  idString[2] = (id%100)/10 + '0';
+  idString[3] = (id%10) + '0';
+  return idString;
+}
+
+/**
+  * @brief  returns string with channel information
+  *
+  * @param  dchannel number
+  * @retval string with channel
+  */
+char BoatCode [][20] = {{"BoatCode/Ch: C1/Ch6"},   // 31
+                       {"BoatCode/Ch: C2/Ch6"},   // 32
+                       {"BoatCode/Ch: C3/Ch6"},   // 33
+                       {"BoatCode/Ch: C4/Ch6"},   // 34
+                       {"BoatCode/Ch: C5/Ch6"}};  // 35
+char* eepromChannelString(int channel)
+{
+  static char errorString[] = "no Channel";
+  static char channelString[] = "Ch 00";
+  if((channel < 1)||(channel > 35))return errorString;
+  if(channel < 31)
+  {
+    channelString[3] = channel/10 + '0';
+    channelString[4] = channel%10 + '0';
+    return channelString;
+  }
+  return BoatCode[channel - 31];
+}
 
 /**
   * @brief  get Mode from eeprom
@@ -261,7 +304,7 @@ char stringMode[][17] ={{"no mode"},   // 0
                         {"PI_FAST"},
                         {"PI_NORMAL"},
                         {"PI_SLOW"},
-                        {"Marport_NORMAL"}};
+                        {"Marport"}};
 char errorMode [] = {"No Mode selected"};
 char* eepromModeString(int inpMode)
 {

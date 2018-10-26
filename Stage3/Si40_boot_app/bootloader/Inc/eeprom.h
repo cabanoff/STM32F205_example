@@ -112,5 +112,19 @@ void eepromModeModePrep(void);
   *          if channels 31-35 returns 2 - NORMAL
   */
 int eepromGetMode(void);
+/**
+  * @brief  re
+  *
+  * @param  device ID
+  * @retval 4 digits string containing device ID like 0001, 0110 etc
+  */
+char* eepromIDString(int id);
+/**
+  * @brief  returns string with channel information
+  *
+  * @param  dchannel number
+  * @retval string with channel
+  */
+char* eepromChannelString(int channel);
 
 #endif /* __EEPROM_H */

@@ -30,9 +30,9 @@
 
 #define MAX_DOWNLOADED_KBYTES 16
 #define MAX_DOWNLOAD_BYTES   (1024 * MAX_DOWNLOADED_KBYTES)
-#define BOOT_VER        2
-#define BOOT_SUB_VER    5
-#define BOOT_BUILD      71
+#define BOOT_VER        3
+#define BOOT_SUB_VER    2
+#define BOOT_BUILD      104
 #define APP_VER        appVer.buffVer[0]
 #define APP_SUB_VER    appVer.buffVer[1]
 #define APP_BUILD      appVer.buffVer[2]
@@ -296,7 +296,7 @@ int main(void)
         if(val == 1)
         {
           mode = initialMode;
-          printf("\n\r New device ID is %d \n\r", eepromGetID());
+          printf("\n\r New device ID is %s \n\r", eepromIDString(eepromGetID()));
         }         
       }
       else if (mode == enterChMode)
@@ -310,7 +310,7 @@ int main(void)
         if(val == 1)
         {
           mode = initialMode;
-          //printf("\n\r New frequency channel is %d \n\r", eepromGetChannel());
+          printf("\n\r New frequency channel is %s \n\r", eepromChannelString(eepromGetChannel()));
           printf("\n\r New frequency %s.\n\r",eepromFreqString(eepromGetChannel()));
         }        
         
@@ -419,13 +419,13 @@ void printDevInfo(void)
   
   int ID = eepromGetID();
   if(ID < 0) printf("\n\r Device ID doesn't exist.\n\r");
-  else printf("\n\r Device ID %d.\n\r",ID);
+  else printf("\n\r Device ID %s.\n\r",eepromIDString(ID));
   
   int Channel = eepromGetChannel();
   if(Channel < 0) printf(" Channel isn't set.\n\r");
   else 
   {
-    printf(" Channel %d.\n\r",Channel);
+    printf(" Channel %s.\n\r",eepromChannelString(Channel));
     printf(" Frequency %s.\n\r",eepromFreqString(Channel));
   }
   if((Channel > 0)&&(Channel < 31))

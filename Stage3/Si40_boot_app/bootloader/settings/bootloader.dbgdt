@@ -910,7 +910,7 @@
                     <item>debugData</item>
                     <item>debugInData</item>
                     <item>debugInFlushData</item>
-                    <item></item>
+                    <item />
                 </expressions>
                 <col-names>
                     <item>Expression</item>
