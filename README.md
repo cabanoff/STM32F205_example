@@ -1,3 +1,3 @@
 # Si40_frequencies
 
-Frequencies generation for Si 40
+управление траловым зондом с загрузчиком
